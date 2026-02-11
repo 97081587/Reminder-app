@@ -1,20 +1,33 @@
-import { View, Text, Button } from "react-native";
-import { useNotifications } from "../hook/useNotifications";
+import {StyleSheet, Text, View } from "react-native";
 
-export default function HomeScreen() {
-
-  const { scheduleReminder } = useNotifications();
-
+export default function Home() {
   return (
-    <View style={{ flex:1, justifyContent:"center", alignItems:"center" }}>
-      <Text>Welcome</Text>
-
-      <Button
-        title="Test Notification (5s)"
-        onPress={() => scheduleReminder("Hello! this is your reminder", 5)}
-      />
+    <View
+      style={styles.container}
+    >
+      <Text style={styles.text}>Reminders</Text>
+      <View style={styles.div}></View>
     </View>
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#DFA355",
+    alignItems: "center",
+  },
+  text: {
+    color: "#ffffff",
+    marginTop: 60,
+    fontSize: 35,
+  },
+  div: {
+    width: 70,
+    height: 70,
+    backgroundColor: "#ffffff",
+    borderRadius: 100,
+    // blurRadius: 1000,
 
+  },
+});
