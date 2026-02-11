@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.obida.reminderapp"
+      "package": "Android.ReminderApp"
     },
     "web": {
       "output": "static",
