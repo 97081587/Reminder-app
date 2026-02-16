@@ -1,4 +1,6 @@
 import {StyleSheet, Text, View } from "react-native";
+import { Link } from 'expo-router';
+import {lineargradient} from 'expo-linear-gradient';
 
 export default function Home() {
   return (
@@ -6,7 +8,9 @@ export default function Home() {
       style={styles.container}
     >
       <Text style={styles.text}>Reminders</Text>
-      <View style={styles.div}></View>
+      <Link href="/editNewReminder">
+        <View style={styles.div}></View>
+      </Link>
     </View>
   );
 }
