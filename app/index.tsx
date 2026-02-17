@@ -1,6 +1,7 @@
 import {StyleSheet, Text, View } from "react-native";
 import { Link } from 'expo-router';
-import {lineargradient} from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
+
 
 export default function Home() {
   return (
