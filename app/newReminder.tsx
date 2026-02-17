@@ -19,8 +19,16 @@ export default function App() {
         {/* Fake "difference" overlay */}
         <View style={styles.differenceOverlay} />
 
-        <Text style={styles.text}>Difference Effect</Text>
-      
+        <Text style={styles.text}>New reminder</Text>
+
+        <View style={ styles.ReminderContainer} />
+        <Text style={styles.title}>Title</Text>
+        <Text style={styles.title}>Description (Optional)</Text>
+        <Text style={styles.title}>Date & Time</Text>
+          <Link href="/">
+            <Text style={styles.cancelText}>Cancel</Text>
+          </Link>
+        {/* </View> */}
       </LinearGradient>
 
     </View>
@@ -42,8 +50,22 @@ const styles = StyleSheet.create({
     opacity: 0, // adjust this to tweak the "difference" look
   },
   text: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "black",
+    flex: 1,
+    color: "#ffffff",
+    marginTop: 60,
+    fontSize: 35,
+  },
+  cancelText: {
+    color: "#000000",
+    fontSize: 20,
+    marginTop: 20,
+  },
+
+  ReminderContainer: {
+    width: 300,
+    height: 200,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    marginTop: 50,
   },
 });
