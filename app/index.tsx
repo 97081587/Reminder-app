@@ -8,7 +8,7 @@ export default function Home() {
       style={styles.container}
     >
       <Text style={styles.text}>Reminders</Text>
-      <Link href="/editNewReminder">
+      <Link href="/newReminder">
         <View style={styles.div}></View>
       </Link>
     </View>
