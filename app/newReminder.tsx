@@ -23,9 +23,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#DFA355",
+    alignItems: "center",
   },
   text: {
-    flex: 1,
     color: "#ffffff",
     marginTop: 60,
     fontSize: 35,
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
 
   ReminderContainer: {
     width: 300,
-    height: 200,
+    height: 500,
     backgroundColor: "#ffffff",
     borderRadius: 20,
     marginTop: 50,
