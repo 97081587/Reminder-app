@@ -15,11 +15,11 @@ export default function Home() {
     saveReminders(reminders);
   }, [reminders]);
 
-  const toggleComplete = (id: string) => {
-    setReminders(prev =>
-      prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r)
-    );
-  };
+  // const toggleComplete = (id: string) => {
+  //   setReminders(prev =>
+  //     prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r)
+  //   );
+  // };
 
   const deleteReminder = (id: string) => {
     setReminders(prev => prev.filter(r => r.id !== id));
@@ -35,18 +35,18 @@ export default function Home() {
         keyExtractor={(item) => item.id}
         style={{ width: "100%", marginTop: 20 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
-        renderItem={({ item }) => (
-          <ReminderCard
-            item={item}
-            onToggle={toggleComplete}
-            onDelete={deleteReminder}
-            onEdit={() => {}}
-          />
-        )}
+        // renderItem={({ item }) => (
+          // <ReminderCard
+          //   item={item}
+          //   onToggle={toggleComplete}
+          //   onDelete={deleteReminder}
+          //   onEdit={() => {}}
+          // />
+        // )}
       />
 
       {/* your original add button */}
-      <Link href="/editNewReminder" style={styles.addWrap}>
+      <Link href="/newReminder" style={styles.addWrap}>
         <View style={styles.div} />
       </Link>
     </View>
