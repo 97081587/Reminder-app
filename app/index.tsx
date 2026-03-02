@@ -46,7 +46,7 @@ export default function Home() {
       />
 
       {/* your original add button */}
-      <Link href="/editNewReminder" style={styles.addWrap}>
+      <Link href="/newReminder" style={styles.addWrap}>
         <View style={styles.div} />
       </Link>
     </View>
