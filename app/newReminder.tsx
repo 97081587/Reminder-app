@@ -1,46 +1,120 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Link } from "expo-router";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
-export default function App() {
+export default function NewReminder() {
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <LinearGradient
+        colors={["#2a8c82", "#d1913c"]}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.header}>New Reminder</Text>
 
-        <Text style={styles.text}>New reminder</Text>
+          <View style={styles.card}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+            />
 
-        <View style={ styles.ReminderContainer} />
-        <Text style={styles.title}>Title</Text>
-        <Text style={styles.title}>Description (Optional)</Text>
-        <Text style={styles.title}>Date & Time</Text>
-          <Link href="/">
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Link>
-    </View>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={styles.textArea}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => router.back()}
+              >
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.addBtn}>
+                <Text style={{ color: "white" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#DFA355",
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  header: {
+    fontSize: 30,
+    color: "white",
+    marginBottom: 30,
+  },
+  card: {
+    width: "85%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 30,
+    padding: 25,
+  },
+  label: {
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  input: {
+    height: 45,
+    backgroundColor: "white",
+    borderRadius: 30,
+    paddingHorizontal: 15,
+  },
+  textArea: {
+    height: 80,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 15,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 30,
+  },
+  cancelBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#ccc",
+    borderRadius: 25,
+    justifyContent: "center",
     alignItems: "center",
   },
-  text: {
-    color: "#ffffff",
-    marginTop: 60,
-    fontSize: 35,
-  },
-  cancelText: {
-    color: "#000000",
-    fontSize: 20,
-    marginTop: 20,
-  },
-
-  ReminderContainer: {
-    width: 300,
-    height: 500,
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    marginTop: 50,
+  addBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#2f9e6f",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
