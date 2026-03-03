@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Link } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   return (

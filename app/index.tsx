@@ -3,6 +3,7 @@ import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import ReminderCard from "../src/components/ReminderCard";
 import { loadReminders, saveReminders } from "../src/storage/reminderStorage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
