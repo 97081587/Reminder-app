@@ -10,7 +10,7 @@ export default function App() {
         <Text style={styles.text}>New reminder</Text>
 
         <View style={ styles.ReminderContainer} />
-        <Text style={styles.title}>Title</Text>
+        <Text style={styles.title}>Title</Text>.
         <Text style={styles.title}>Description (Optional)</Text>
         <Text style={styles.title}>Date & Time</Text>
           <Link href="/">
