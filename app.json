@@ -49,8 +49,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "bf6c4f23-504b-4969-bf16-42f48c6a2002"
+        "projectId": "a3c05425-bdb5-47ca-ab2f-b407189ab9da"
       }
-    }
+    },
+    "owner": "reminder-app"
   }
 }
