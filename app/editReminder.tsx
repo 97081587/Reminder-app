@@ -8,20 +8,26 @@ import { useRouter } from "expo-router";
 export default function EditReminder() {
 
     return (
-        <linearGradient 
+        <LinearGradient 
             colors={["#2a8c82", "#d1913c"]} 
             style={{ flex: 1 }}
         >
-            <view style={styles.container}>
-                <Text>Edit Reminder</Text>
-            </view>
-        </linearGradient>
+            <View style={styles.container}>
+                <Text style={styles.title}>Edit Reminder</Text>
+            </View>
+        </LinearGradient>
     );
 }
 
 //"CSS"
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flex: 1,   
+        alignItems: "center",
+    },
+    title: {
+        fontSize: 30,
+        color: "white",
+        marginBottom: 30,
     }
 });
