@@ -29,6 +29,8 @@ export default function EditReminder() {
                         />
 
                         {/* cancel and save buttons */}
+                        <text>Cancel</text>
+                        <text>Add</text>
                     </View>
             </View>
         </LinearGradient>
