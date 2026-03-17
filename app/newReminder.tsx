@@ -1,19 +1,43 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-} from "react-native";
+
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import * as Notifications from "expo-notifications"; // already added
+
+// ✅ ADD THIS HERE (outside the component)
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+
 
 export default function NewReminder() {
+  const scheduleNotification = async () => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: title || "Reminder",
+      body: description || "You have a reminder",
+    },
+    trigger: {
+      seconds: 5, // ⏱️ test: notification after 5 seconds
+    },
+  });
+};
   const router = useRouter();
 
   const [title, setTitle] = useState("");
@@ -81,11 +105,14 @@ export default function NewReminder() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.addBtn}
-                onPress={saveReminder}
-              >
-                <Text style={{ color: "white" }}>Add</Text>
-              </TouchableOpacity>
+  style={styles.addBtn}
+  onPress={async () => {
+    await scheduleNotification();
+    router.back();
+  }}
+>
+  <Text style={{ color: "white" }}>Add</Text>
+</TouchableOpacity>
             </View>
           </View>
         </ScrollView>
