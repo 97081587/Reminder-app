@@ -1,10 +1,21 @@
-import { StyleSheet, Text, View, TextInput } from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity,Button, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useState } from "react";
 
 //"HTML"
 export default function EditReminder() {
     const router = useRouter();
+    // for date selector
+    const [date, setDate] = useState(new Date());
+    const [show, setShow] = useState(false);
+
+    // date selector ios
+  const onChange = (event, selectedDate) => {
+    setShow(Platform.OS === 'ios'); // keep open on iOS
+    if (selectedDate) setDate(selectedDate);
+  };
 
     return (
         <LinearGradient 
@@ -30,10 +41,35 @@ export default function EditReminder() {
                             style={styles.inputDesc}
                         />
 
-                        {/* cancel and save buttons */}
+                        {/* date selector for the reminder */}
+                        <View style={{ padding: 20 }}>
+                            <Button onPress={() => setShow(true)} title="Select Date" />
+                            {show && (
+                                <DateTimePicker
+                                value={date}
+                                mode="date"
+                                display="default"
+                                onChange={onChange}
+                                />
+                            )}
+                            <Text style={{ marginTop: 20 }}>Selected Date: {date.toDateString()}</Text>
+                        </View>
+
+                        {/* cancel and edit buttons */}
                         <View style={styles.buttonContainer}>
-                            <Text style={styles.cancelBtn}>Cancel</Text>
-                            <Text style={styles.addBtn}>Edit Reminder</Text>
+                            <TouchableOpacity 
+                                style={styles.cancelBtn}
+                                onPress={() => router.back()}
+                            >
+                                <Text>Cancel</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={styles.addBtn} 
+                                // onPress={saveReminder}
+                            >
+                                <Text>Edit Reminder</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
             </View>
