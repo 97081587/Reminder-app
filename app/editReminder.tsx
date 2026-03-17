@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, TextInput, FlatList } from "react-native";
-import { Link, useRouter} from "expo-router";
-import  { React, useState } from "react";
+import { StyleSheet, Text, View, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 //"HTML"
 export default function EditReminder() {
+    const router = useRouter();
 
     return (
         <LinearGradient 
@@ -12,10 +12,12 @@ export default function EditReminder() {
             style={{ flex: 1 }}
         >
             <View style={styles.container}>
+
                 {/* page title */}
                 <Text style={styles.title}>Edit Reminder</Text>
 
                     <View style={styles.card}>
+
                         {/* title field of the reminder */}
                         <Text style={styles.label}>Title</Text>
                         <TextInput
@@ -25,12 +27,14 @@ export default function EditReminder() {
                         {/* description field of the reminder */}
                         <Text style={styles.label}>Description (optional)</Text>
                         <TextInput
-                            style={styles.input}
+                            style={styles.inputDesc}
                         />
 
                         {/* cancel and save buttons */}
-                        <text>Cancel</text>
-                        <text>Add</text>
+                        <View style={styles.buttonContainer}>
+                            <Text style={styles.cancelBtn}>Cancel</Text>
+                            <Text style={styles.addBtn}>Edit Reminder</Text>
+                        </View>
                     </View>
             </View>
         </LinearGradient>
@@ -64,5 +68,32 @@ const styles = StyleSheet.create({
         backgroundColor: "white",
         borderRadius: 30,
         paddingHorizontal: 15,
-    }
+    },
+    inputDesc: {
+        height: 80,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 15,
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 30,
+    },
+    cancelBtn: {
+        width: "45%",
+        height: 45,
+        backgroundColor: "#ccc",
+        borderRadius: 25,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    addBtn: {
+        width: "45%",
+        height: 45,
+        backgroundColor: "#2f9e6f",
+        borderRadius: 25,
+        justifyContent: "center",
+        alignItems: "center",
+  },
 });
