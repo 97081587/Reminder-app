@@ -5,20 +5,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
 
 
+
+
 export default function EditReminder() {
     const router = useRouter();
     
     // opslaan
-    const saveEditedReminder = async (id, newText) => {
-        const reminders = await getReminders();
+    // const saveEditedReminder = async (id, newText) => {
+    //     const reminders = await getReminders();
 
-        const updated = reminders.map(r =>
-            r.id === id ? { ...r, text: newText } : r
-        );
+    //     const updated = reminders.map(r =>
+    //         r.id === id ? { ...r, text: newText } : r
+    //     );
 
-        await saveReminders(updated);
-        return updated;
-    };
+    //     await saveReminders(updated);
+    //     return updated;
+    // };
 
     //"HTML"
     return (
@@ -80,7 +82,7 @@ export default function EditReminder() {
                             
                             <TouchableOpacity 
                                 style={styles.addBtn} 
-                                onPress={() => saveEditedReminder(id, newText)}
+                                // onPress={() => saveEditedReminder(id, newText)}
                             >
                                 <Link href="/">
                                     <Text>Edit Reminder</Text>
