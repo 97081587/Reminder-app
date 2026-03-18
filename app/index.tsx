@@ -15,37 +15,22 @@ export default function Home() {
     saveReminders(reminders);
   }, [reminders]);
 
-  // const toggleComplete = (id: string) => {
-  //   setReminders(prev =>
-  //     prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r)
-  //   );
-  // };
-
-  const deleteReminder = (id: string) => {
-    setReminders(prev => prev.filter(r => r.id !== id));
+  const deleteReminder = (id) => {
+    setReminders((prev) => prev.filter((r) => r.id !== id));
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Reminders</Text>
 
-      {/* 🔽 ADDED LIST (your UI untouched) */}
       <FlatList
         data={reminders}
-        keyExtractor={(item) => item.id}
-        style={{ width: "100%", marginTop: 20 }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
-        // renderItem={({ item }) => (
-          // <ReminderCard
-          //   item={item}
-          //   onToggle={toggleComplete}
-          //   onDelete={deleteReminder}
-          //   onEdit={() => {}}
-          // />
-        // )}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <ReminderCard item={item} onDelete={deleteReminder} />
+        )}
       />
 
-      {/* your original add button */}
       <Link href="/newReminder" style={styles.addWrap}>
         <View style={styles.div} />
       </Link>
@@ -60,14 +45,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    color: "#ffffff",
+    color: "#fff",
     marginTop: 60,
     fontSize: 35,
   },
   div: {
     width: 70,
     height: 70,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     borderRadius: 100,
   },
   addWrap: {

@@ -1,17 +1,25 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import * as Notifications from "expo-notifications";
+
+// ✅ Notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function NewReminder() {
   const router = useRouter();
@@ -19,27 +27,32 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const saveReminder = async () => {
-    const newReminder = {
-      id: Date.now(),
-      title: title,
-      description: description,
-    };
-
+  // ✅ FIXED FUNCTION
+  const handleAddReminder = async () => {
     try {
-      const existingReminders = await AsyncStorage.getItem("reminders");
+      const { status } = await Notifications.requestPermissionsAsync();
 
-      const reminders = existingReminders
-        ? JSON.parse(existingReminders)
-        : [];
+      if (status !== "granted") {
+        alert("Permission not granted");
+        return;
+      }
 
-      reminders.push(newReminder);
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: title || "Reminder",
+          body: description || "You have a reminder",
+        },
+        trigger: {
+          type: "timeInterval", // ✅ FIX
+          seconds: 5,
+          repeats: false,
+        },
+      });
 
-      await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
-
+      alert("Reminder set!");
       router.back();
     } catch (error) {
-      console.log("Error saving reminder:", error);
+      console.log(error);
     }
   };
 
@@ -54,7 +67,6 @@ export default function NewReminder() {
 
           <View style={styles.card}>
             <Text style={styles.label}>Title</Text>
-
             <TextInput
               style={styles.input}
               value={title}
@@ -63,7 +75,6 @@ export default function NewReminder() {
             />
 
             <Text style={styles.label}>Description</Text>
-
             <TextInput
               style={styles.textArea}
               value={description}
@@ -82,7 +93,7 @@ export default function NewReminder() {
 
               <TouchableOpacity
                 style={styles.addBtn}
-                onPress={saveReminder}
+                onPress={handleAddReminder}
               >
                 <Text style={{ color: "white" }}>Add</Text>
               </TouchableOpacity>
@@ -100,45 +111,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 60,
   },
-
   header: {
     fontSize: 30,
     color: "white",
     marginBottom: 30,
   },
-
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 30,
     padding: 25,
   },
-
   label: {
     marginTop: 15,
     marginBottom: 8,
   },
-
   input: {
     height: 45,
     backgroundColor: "white",
     borderRadius: 30,
     paddingHorizontal: 15,
   },
-
   textArea: {
     height: 80,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 15,
   },
-
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 30,
   },
-
   cancelBtn: {
     width: "45%",
     height: 45,
@@ -147,7 +151,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   addBtn: {
     width: "45%",
     height: 45,
