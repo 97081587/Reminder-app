@@ -13,9 +13,66 @@ import DateTimePicker, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
+import React, { useState } from "react";
 
 export default function EditReminder() {
   const router = useRouter();
+
+    const [title, setTitle] = useState("");
+    const [date, setDate] = useState(new Date());
+    const [showPicker, setShowPicker] = useState(false);
+    const [mode, setMode] = useState<"date" | "time">("date");
+
+      // Open picker
+      const showMode = (currentMode: "date" | "time") => {
+        setMode(currentMode);
+        setShowPicker(true);
+      };
+    
+      // Handle date/time change
+      const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (event.type === "set" && selectedDate) {
+          const currentDate = new Date(date);
+    
+          if (mode === "date") {
+            currentDate.setFullYear(
+              selectedDate.getFullYear(),
+              selectedDate.getMonth(),
+              selectedDate.getDate(),
+            );
+            setDate(currentDate);
+    
+            if (Platform.OS === "android") {
+              // Open time picker automatically on Android
+              showMode("time");
+              return; // Don't hide picker yet
+            }
+          } else if (mode === "time") {
+            currentDate.setHours(
+              selectedDate.getHours(),
+              selectedDate.getMinutes(),
+            );
+            setDate(currentDate);
+          }
+        }
+    
+        // Hide picker on iOS or after time selection on Android
+        if (Platform.OS === "ios" || mode === "time") {
+          setShowPicker(false);
+        }
+      };
+    
+      const handleAddReminder = async () => {
+        if (!title) {
+          alert("Please enter a title");
+          return;
+        }
+    
+        if (date < new Date()) {
+          alert("Please select a future date and time");
+          return;
+        }   
+      }
 
   // opslaan
   // const saveEditedReminder = async (id, newText) => {
