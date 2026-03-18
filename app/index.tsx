@@ -20,17 +20,10 @@ export default function Home() {
       {/* reminder list */}
       <FlatList
         data={reminders}
-        keyExtractor={(item) => item.id}
-        style={{ width: "100%", marginTop: 20 }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
-        // renderItem={({ item }) => (
-          // <ReminderCard
-          //   item={item}
-          //   onToggle={toggleComplete}
-          //   onDelete={deleteReminder}
-          //   onEdit={() => {}}
-          // />
-        // )}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <ReminderCard item={item} onDelete={deleteReminder} />
+        )}
       />
 
       {/* add button */}
@@ -48,14 +41,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    color: "#ffffff",
+    color: "#fff",
     marginTop: 60,
     fontSize: 35,
   },
   div: {
     width: 70,
     height: 70,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     borderRadius: 100,
   },
   addWrap: {
