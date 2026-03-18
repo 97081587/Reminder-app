@@ -1,136 +1,207 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity,Button, Platform } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Button,
+  Platform,
+} from "react-native";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-// import DateTimePicker from "react-native-modal-datetime-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
+import { useRouter, Link } from "expo-router";
+import React, { useState } from "react";
 
-//"HTML"
 export default function EditReminder() {
-    const router = useRouter();
-    // for date selector
+  const router = useRouter();
+
+    const [title, setTitle] = useState("");
     const [date, setDate] = useState(new Date());
-    const [show, setShow] = useState(false);
+    const [showPicker, setShowPicker] = useState(false);
+    const [mode, setMode] = useState<"date" | "time">("date");
 
-    // date selector ios
-  const onChange = (event, selectedDate) => {
-    setShow(Platform.OS === 'ios'); // keep open on iOS
-    if (selectedDate) setDate(selectedDate);
-  };
+      // Open picker
+      const showMode = (currentMode: "date" | "time") => {
+        setMode(currentMode);
+        setShowPicker(true);
+      };
+    
+      // Handle date/time change
+      const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (event.type === "set" && selectedDate) {
+          const currentDate = new Date(date);
+    
+          if (mode === "date") {
+            currentDate.setFullYear(
+              selectedDate.getFullYear(),
+              selectedDate.getMonth(),
+              selectedDate.getDate(),
+            );
+            setDate(currentDate);
+    
+            if (Platform.OS === "android") {
+              // Open time picker automatically on Android
+              showMode("time");
+              return; // Don't hide picker yet
+            }
+          } else if (mode === "time") {
+            currentDate.setHours(
+              selectedDate.getHours(),
+              selectedDate.getMinutes(),
+            );
+            setDate(currentDate);
+          }
+        }
+    
+        // Hide picker on iOS or after time selection on Android
+        if (Platform.OS === "ios" || mode === "time") {
+          setShowPicker(false);
+        }
+      };
+    
+      const handleAddReminder = async () => {
+        if (!title) {
+          alert("Please enter a title");
+          return;
+        }
+    
+        if (date < new Date()) {
+          alert("Please select a future date and time");
+          return;
+        }   
+      }
 
-    return (
-        <LinearGradient 
-            colors={["#2a8c82", "#d1913c"]} 
-            style={{ flex: 1 }}
-        >
-            <View style={styles.container}>
+  // opslaan
+  // const saveEditedReminder = async (id, newText) => {
+  //     const reminders = await getReminders();
 
-                {/* page title */}
-                <Text style={styles.title}>Edit Reminder</Text>
+  //     const updated = reminders.map(r =>
+  //         r.id === id ? { ...r, text: newText } : r
+  //     );
 
-                    <View style={styles.card}>
+  //     await saveReminders(updated);
+  //     return updated;
+  // };
 
-                        {/* title field of the reminder */}
-                        <Text style={styles.label}>Title</Text>
-                        <TextInput
-                            style={styles.input}
-                        />
+  //"HTML"
+  return (
+    <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {/* page title */}
+        <Text style={styles.title}>Edit Reminder</Text>
 
-                        {/* description field of the reminder */}
-                        <Text style={styles.label}>Description (optional)</Text>
-                        <TextInput
-                            style={styles.inputDesc}
-                        />
+        <View style={styles.card}>
+          {/* title field of the reminder */}
+          <Text style={styles.label}>Title</Text>
+          <TextInput style={styles.input} />
 
-                        {/* date selector for the reminder */}
-                        <View style={{ padding: 20 }}>
-                            <Button onPress={() => setShow(true)} title="Select Date" />
-                            {show && (
-                                <DateTimePicker
-                                value={date}
-                                mode="date"
-                                display="default"
-                                onChange={onChange}
-                                />
-                            )}
-                            <Text style={{ marginTop: 20 }}>Selected Date: {date.toDateString()}</Text>
-                        </View>
+          {/* description field of the reminder */}
+          <Text style={styles.label}>Description (optional)</Text>
+          <TextInput style={styles.inputDesc} />
 
-                        {/* cancel and edit buttons */}
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity 
-                                style={styles.cancelBtn}
-                                onPress={() => router.back()}
-                            >
-                                <Text>Cancel</Text>
-                            </TouchableOpacity>
+          {/* date selector for the reminder */}
+          <Text style={styles.label}>Date & Time</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => showMode("date")}
+          >
+            <Text>
+              {date.toLocaleDateString()}{" "}
+              {date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                style={styles.addBtn} 
-                                // onPress={saveReminder}
-                            >
-                                <Text>Edit Reminder</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-            </View>
-        </LinearGradient>
-    );
+          {showPicker && (
+            <DateTimePicker
+              value={date}
+              mode={mode}
+              display="default"
+              onChange={onChangeDate}
+            />
+          )}
+
+          {/* cancel and edit buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.cancelBtn}>
+              <Link href="/">
+                <Text>Cancel</Text>
+              </Link>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.addBtn}
+              // onPress={() => saveEditedReminder(id, newText)}
+            >
+              <Link href="/">
+                <Text>Edit Reminder</Text>
+              </Link>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </LinearGradient>
+  );
 }
 
 //"CSS"
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,   
-        alignItems: "center",
-        paddingTop: 60,
-    },
-    title: {
-        fontSize: 30,
-        color: "white",
-        marginBottom: 30,
-    },
-    card: {
-        width: "85%",
-        backgroundColor: "rgba(255,255,255,0.3)",
-        borderRadius: 30,
-        padding: 25,
-    },
-    label: {
-        marginTop: 15,
-        marginBottom: 8,
-    },
-    input: {
-        height: 45,
-        backgroundColor: "white",
-        borderRadius: 30,
-        paddingHorizontal: 15,
-    },
-    inputDesc: {
-        height: 80,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 15,
-    },
-    buttonContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 30,
-    },
-    cancelBtn: {
-        width: "45%",
-        height: 45,
-        backgroundColor: "#ccc",
-        borderRadius: 25,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    addBtn: {
-        width: "45%",
-        height: 45,
-        backgroundColor: "#2f9e6f",
-        borderRadius: 25,
-        justifyContent: "center",
-        alignItems: "center",
+  container: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 30,
+    color: "white",
+    marginBottom: 30,
+  },
+  card: {
+    width: "85%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 30,
+    padding: 25,
+  },
+  label: {
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  input: {
+    height: 45,
+    backgroundColor: "white",
+    borderRadius: 30,
+    paddingHorizontal: 15,
+  },
+  inputDesc: {
+    height: 80,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 15,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 30,
+  },
+  cancelBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#ccc",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#2f9e6f",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

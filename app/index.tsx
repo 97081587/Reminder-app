@@ -1,49 +1,49 @@
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  Touchable,
+  TouchableOpacity,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import ReminderCard from "../src/components/ReminderCard";
-
-import { loadReminders, saveReminders } from "../src/storage/reminderStorage";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  useEffect(() => {
-    loadReminders().then(setReminders);
-  }, []);
-
-  useEffect(() => {
-    saveReminders(reminders);
-  }, [reminders]);
-
-  const deleteReminder = (id) => {
-    setReminders((prev) => prev.filter((r) => r.id !== id));
-  };
+  // useEffect(() => {}, [reminders]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Reminders</Text>
+    <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.text}>Reminders</Text>
 
-      <FlatList
-        data={reminders}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ReminderCard item={item} onDelete={deleteReminder} />
-        )}
-      />
+        {/* reminder list */}
+        <FlatList
+          data={reminders}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <ReminderCard item={item} onDelete={deleteReminder} />
+          )}
+        />
 
-      <Link href="/newReminder" style={styles.addWrap}>
-        <View style={styles.div} />
-      </Link>
-    </View>
+        {/* add button */}
+        <TouchableOpacity style={styles.addWrap}>
+          <Link href="/newReminder">
+            <View style={styles.div} />
+          </Link>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#DFA355",
     alignItems: "center",
   },
   text: {
