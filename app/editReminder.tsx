@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity,Button, Platform } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
-import { useState } from "react";
 
 
 export default function EditReminder() {
@@ -20,7 +20,7 @@ export default function EditReminder() {
         return updated;
     };
 
-//"HTML"
+    //"HTML"
     return (
         <LinearGradient 
             colors={["#2a8c82", "#d1913c"]} 
@@ -46,6 +46,25 @@ export default function EditReminder() {
                         />
 
                         {/* date selector for the reminder */}
+                        <Text style={styles.label}>Date & Time</Text>
+                            <TouchableOpacity
+                                style={styles.input}
+                                onPress={() => showMode("date")}
+                                >
+                                <Text>
+                                    {date.toLocaleDateString()}{" "}
+                                    {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {showPicker && (
+                                <DateTimePicker
+                                    value={date}
+                                    mode={mode}
+                                    display="default"
+                                    onChange={onChangeDate}
+                                />
+                            )}
 
 
                         {/* cancel and edit buttons */}
@@ -59,7 +78,6 @@ export default function EditReminder() {
                                 </Link>
                             </TouchableOpacity>
                             
-
                             <TouchableOpacity 
                                 style={styles.addBtn} 
                                 onPress={() => saveEditedReminder(id, newText)}

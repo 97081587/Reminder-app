@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { StyleSheet, Text, View, FlatList, Touchable, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
@@ -27,9 +27,11 @@ export default function Home() {
       />
 
       {/* add button */}
-      <Link href="/newReminder" style={styles.addWrap}>
+      <TouchableOpacity style={styles.addWrap}>
+      <Link href="/newReminder" >
         <View style={styles.div} />
       </Link>
+      </TouchableOpacity>
     </View>
     </LinearGradient>
   );
