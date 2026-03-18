@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity,Button, Platform } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, Link } from "expo-router";
 import { useState } from "react";
 
 
@@ -50,18 +50,23 @@ export default function EditReminder() {
 
                         {/* cancel and edit buttons */}
                         <View style={styles.buttonContainer}>
+                            
                             <TouchableOpacity 
-                                style={styles.cancelBtn}
-                                onPress={() => router.back()}
+                                style={styles.cancelBtn}    
                             >
-                                <Text>Cancel</Text>
+                                <Link href="/">
+                                    <Text>Cancel</Text>
+                                </Link>
                             </TouchableOpacity>
+                            
 
                             <TouchableOpacity 
                                 style={styles.addBtn} 
                                 onPress={() => saveEditedReminder(id, newText)}
                             >
-                                <Text>Edit Reminder</Text>
+                                <Link href="/">
+                                    <Text>Edit Reminder</Text>
+                                </Link>
                             </TouchableOpacity>
                         </View>
                     </View>
