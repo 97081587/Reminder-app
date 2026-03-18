@@ -1,12 +1,26 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity,Button, Platform } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
-//"HTML"
+
 export default function EditReminder() {
     const router = useRouter();
+    
+    // opslaan
+    const saveEditedReminder = async (id, newText) => {
+        const reminders = await getReminders();
 
+        const updated = reminders.map(r =>
+            r.id === id ? { ...r, text: newText } : r
+        );
+
+        await saveReminders(updated);
+        return updated;
+    };
+
+//"HTML"
     return (
         <LinearGradient 
             colors={["#2a8c82", "#d1913c"]} 
@@ -45,7 +59,7 @@ export default function EditReminder() {
 
                             <TouchableOpacity 
                                 style={styles.addBtn} 
-                                // onPress={saveReminder}
+                                onPress={() => saveEditedReminder(id, newText)}
                             >
                                 <Text>Edit Reminder</Text>
                             </TouchableOpacity>
