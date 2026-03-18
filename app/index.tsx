@@ -1,37 +1,23 @@
 import { StyleSheet, Text, View, FlatList } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import ReminderCard from "../src/components/ReminderCard";
-
-import { loadReminders, saveReminders } from "../src/storage/reminderStorage";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  useEffect(() => {
-    loadReminders().then(setReminders);
-  }, []);
-
-  useEffect(() => {
-    saveReminders(reminders);
-  }, [reminders]);
-
-  // const toggleComplete = (id: string) => {
-  //   setReminders(prev =>
-  //     prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r)
-  //   );
-  // };
-
-  const deleteReminder = (id: string) => {
-    setReminders(prev => prev.filter(r => r.id !== id));
-  };
+  // useEffect(() => {}, [reminders]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Reminders</Text>
+    <LinearGradient 
+      colors={["#2a8c82", "#d1913c"]} 
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        <Text style={styles.text}>Reminders</Text>
 
-      {/* 🔽 ADDED LIST (your UI untouched) */}
+      {/* reminder list */}
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id}
@@ -47,18 +33,18 @@ export default function Home() {
         // )}
       />
 
-      {/* your original add button */}
+      {/* add button */}
       <Link href="/newReminder" style={styles.addWrap}>
         <View style={styles.div} />
       </Link>
     </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#DFA355",
     alignItems: "center",
   },
   text: {
