@@ -7,6 +7,8 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,8 +16,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  FlatList,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
