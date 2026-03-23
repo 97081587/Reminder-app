@@ -52,10 +52,7 @@ export default function NewReminder() {
   };
 
   // Handle date/time change
-  const onChangeDate = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ) => {
+  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (event.type === "set" && selectedDate) {
       const currentDate = new Date(date);
 
@@ -63,7 +60,7 @@ export default function NewReminder() {
         currentDate.setFullYear(
           selectedDate.getFullYear(),
           selectedDate.getMonth(),
-          selectedDate.getDate()
+          selectedDate.getDate(),
         );
         setDate(currentDate);
 
@@ -73,7 +70,7 @@ export default function NewReminder() {
       } else {
         currentDate.setHours(
           selectedDate.getHours(),
-          selectedDate.getMinutes()
+          selectedDate.getMinutes(),
         );
         setDate(currentDate);
       }
@@ -131,14 +128,13 @@ export default function NewReminder() {
     }
 
     // ✅ Schedule notification
-    const notificationId =
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body: description || "Reminder",
-        },
-        trigger,
-      });
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body: description || "Reminder",
+      },
+      trigger,
+    });
 
     // ✅ Save reminder (IMPORTANT for team)
     const newReminder = {
@@ -155,10 +151,7 @@ export default function NewReminder() {
 
     reminders.push(newReminder);
 
-    await AsyncStorage.setItem(
-      "reminders",
-      JSON.stringify(reminders)
-    );
+    await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
     alert("Reminder saved!");
     router.back(); // go back to list screen
@@ -181,11 +174,11 @@ export default function NewReminder() {
 
             <Text style={styles.label}>Description</Text>
             <TextInput
- style={styles.textArea}
-  value={description}
-  onChangeText={setDescription}
-   multiline
- placeholder="Enter description"
+              style={styles.textArea}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              placeholder="Enter description"
             />
 
             <Text style={styles.label}>Date & Time</Text>
