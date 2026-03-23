@@ -32,9 +32,9 @@ export default function Home() {
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>
-          {/* <Link href="/newReminder"> */}
+          <Link href="/newReminder">
             <View style={styles.div} />
-          {/* </Link> */}
+          </Link>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   },
   addWrap: {
     position: "absolute",
-    bottom: 40,
+    bottom: 40, 
     right: 25,
   },
 });
