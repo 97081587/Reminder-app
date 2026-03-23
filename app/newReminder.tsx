@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,8 +15,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-// Notification handler
+import { SafeAreaProvider } from "react-native-safe-area-context";
+// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -31,16 +32,30 @@ export default function NewReminder() {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [mode, setMode] = useState("date"); // "date" or "time"
+  const [mode, setMode] = useState<"date" | "time">("date");
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+
+  // ✅ Android notification channel
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.HIGH,
+      });
+    }
+  }, []);
 
   // Open picker
-  const showMode = (currentMode) => {
+  const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
   };
 
   // Handle date/time change
-  const onChangeDate = (event, selectedDate) => {
+  const onChangeDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
     if (event.type === "set" && selectedDate) {
       const currentDate = new Date(date);
 
@@ -53,10 +68,9 @@ export default function NewReminder() {
         setDate(currentDate);
 
         if (Platform.OS === "android") {
-          // Open time picker automatically on Android
-          showMode("time");
+          showMode("time"); // open time picker automatically
         }
-      } else if (mode === "time") {
+      } else {
         currentDate.setHours(
           selectedDate.getHours(),
           selectedDate.getMinutes()
@@ -67,6 +81,7 @@ export default function NewReminder() {
     setShowPicker(false);
   };
 
+  // ✅ Main function
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
@@ -78,43 +93,84 @@ export default function NewReminder() {
       return;
     }
 
-    const { status } = await Notifications.requestPermissionsAsync();
+    // ✅ Permissions
+    const { status } = await Notifications.getPermissionsAsync();
+    let finalStatus = status;
+
     if (status !== "granted") {
+      const { status: newStatus } =
+        await Notifications.requestPermissionsAsync();
+      finalStatus = newStatus;
+    }
+
+    if (finalStatus !== "granted") {
       alert("Permission not granted");
       return;
     }
 
+    // ✅ Trigger logic (repeat support)
+    let trigger: any;
+
+    if (repeat === "daily") {
+      trigger = {
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        weekday: date.getDay() + 1, // Expo: 1 = Sunday
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = {
+        date: new Date(date),
+      };
+    }
+
+    // ✅ Schedule notification
+    const notificationId =
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body: description || "Reminder",
+        },
+        trigger,
+      });
+
+    // ✅ Save reminder (IMPORTANT for team)
     const newReminder = {
       id: Date.now().toString(),
-      title: title,
-      description: description,
+      title,
+      description,
       date: date.toISOString(),
+      repeat,
+      notificationId,
     };
 
-    const storedReminders = await AsyncStorage.getItem("reminders");
-    const reminders = storedReminders ? JSON.parse(storedReminders) : [];
+    const stored = await AsyncStorage.getItem("reminders");
+    const reminders = stored ? JSON.parse(stored) : [];
 
     reminders.push(newReminder);
-    await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    // Schedule notification
-    await Notifications.scheduleNotificationAsync({
-      content: { title: newReminder.title, body: newReminder.description },
-      trigger: new Date(newReminder.date),
-    });
+    await AsyncStorage.setItem(
+      "reminders",
+      JSON.stringify(reminders)
+    );
 
     alert("Reminder saved!");
-    router.back();
+    router.back(); // go back to list screen
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
-            {/* Title */}
             <Text style={styles.label}>Title</Text>
             <TextInput
               style={styles.input}
@@ -123,25 +179,26 @@ export default function NewReminder() {
               placeholder="Enter title"
             />
 
-            {/* Description */}
             <Text style={styles.label}>Description</Text>
             <TextInput
-              style={styles.textArea}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              placeholder="Enter description"
+ style={styles.textArea}
+  value={description}
+  onChangeText={setDescription}
+   multiline
+ placeholder="Enter description"
             />
 
-            {/* Date & Time Picker */}
             <Text style={styles.label}>Date & Time</Text>
             <TouchableOpacity
               style={styles.input}
               onPress={() => showMode("date")}
             >
               <Text>
-                {date.toLocaleDateString()} {" "}
-                {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {date.toLocaleDateString()}{" "}
+                {date.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             </TouchableOpacity>
 
@@ -154,7 +211,28 @@ export default function NewReminder() {
               />
             )}
 
-            {/* Buttons */}
+            <Text style={styles.label}>Repeat</Text>
+            <View style={styles.repeatRow}>
+              {["none", "daily", "weekly"].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.repeatBtn,
+                    repeat === item && styles.activeBtn,
+                  ]}
+                  onPress={() => setRepeat(item as any)}
+                >
+                  <Text
+                    style={{
+                      color: repeat === item ? "white" : "black",
+                    }}
+                  >
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -173,18 +251,65 @@ export default function NewReminder() {
           </View>
         </ScrollView>
       </LinearGradient>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, alignItems: "center", paddingTop: 60 },
-  header: { fontSize: 30, color: "white", marginBottom: 30 },
-  card: { width: "85%", backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 30, padding: 25 },
-  label: { marginTop: 15, marginBottom: 8 },
-  input: { height: 45, backgroundColor: "white", borderRadius: 30, paddingHorizontal: 15, justifyContent: "center" },
-  textArea: { height: 80, backgroundColor: "white", borderRadius: 20, padding: 15 },
-  buttonRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 30 },
-  cancelBtn: { width: "45%", height: 45, backgroundColor: "#ccc", borderRadius: 25, justifyContent: "center", alignItems: "center" },
-  addBtn: { width: "45%", height: 45, backgroundColor: "#2f9e6f", borderRadius: 25, justifyContent: "center", alignItems: "center" },
+  header: { fontSize: 30, color: "white", marginBottom: 20 },
+  card: {
+    width: "85%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 30,
+    padding: 20,
+  },
+  label: { marginTop: 10 },
+  input: {
+    height: 45,
+    backgroundColor: "white",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    justifyContent: "center",
+  },
+  textArea: {
+    height: 70,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 10,
+  },
+  repeatRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  repeatBtn: {
+    padding: 10,
+    backgroundColor: "#eee",
+    borderRadius: 20,
+  },
+  activeBtn: {
+    backgroundColor: "#2f9e6f",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  cancelBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#ccc",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addBtn: {
+    width: "45%",
+    height: 45,
+    backgroundColor: "#2f9e6f",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
