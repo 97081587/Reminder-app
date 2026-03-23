@@ -13,79 +13,86 @@ import DateTimePicker, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "expo-router";
 
 export default function EditReminder() {
   const router = useRouter();
 
-    const [title, setTitle] = useState("");
-    const [date, setDate] = useState(new Date());
-    const [showPicker, setShowPicker] = useState(false);
-    const [mode, setMode] = useState<"date" | "time">("date");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [mode, setMode] = useState<"date" | "time">("date");
+  const { id } = useSearchParams(); // id of reminder to edit
 
-      // Open picker
-      const showMode = (currentMode: "date" | "time") => {
-        setMode(currentMode);
-        setShowPicker(true);
-      };
-    
-      // Handle date/time change
-      const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        if (event.type === "set" && selectedDate) {
-          const currentDate = new Date(date);
-    
-          if (mode === "date") {
-            currentDate.setFullYear(
-              selectedDate.getFullYear(),
-              selectedDate.getMonth(),
-              selectedDate.getDate(),
-            );
-            setDate(currentDate);
-    
-            if (Platform.OS === "android") {
-              // Open time picker automatically on Android
-              showMode("time");
-              return; // Don't hide picker yet
-            }
-          } else if (mode === "time") {
-            currentDate.setHours(
-              selectedDate.getHours(),
-              selectedDate.getMinutes(),
-            );
-            setDate(currentDate);
-          }
-        }
-    
-        // Hide picker on iOS or after time selection on Android
-        if (Platform.OS === "ios" || mode === "time") {
-          setShowPicker(false);
-        }
-      };
-    
-      const handleAddReminder = async () => {
-        if (!title) {
-          alert("Please enter a title");
-          return;
-        }
-    
-        if (date < new Date()) {
-          alert("Please select a future date and time");
-          return;
-        }   
+  //edit reminder data on load
+  useEffect(() => {
+    const loadReminder = async () => {
+      const json = await AsyncStorage.getItem("reminders");
+      const reminders = json ? JSON.parse(json) : [];
+
+      const reminder = reminders.find((r) => r.id === Number(id));
+      if (reminder) {
+        setTitle(reminder.text);
+        setDescription(reminder.description || "");
+        setDate(new Date(reminder.date));
       }
+    };
 
-  // opslaan
-  // const saveEditedReminder = async (id, newText) => {
-  //     const reminders = await getReminders();
+    loadReminder();
+  }, [id]);
 
-  //     const updated = reminders.map(r =>
-  //         r.id === id ? { ...r, text: newText } : r
-  //     );
+  // Open picker
+  const showMode = (currentMode: "date" | "time") => {
+    setMode(currentMode);
+    setShowPicker(true);
+  };
 
-  //     await saveReminders(updated);
-  //     return updated;
-  
-  // };
+  // Handle date/time change
+  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === "set" && selectedDate) {
+      const currentDate = new Date(date);
+
+      if (mode === "date") {
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+        );
+        setDate(currentDate);
+
+        if (Platform.OS === "android") {
+          // Open time picker automatically on Android
+          showMode("time");
+          return; // Don't hide picker yet
+        }
+      } else if (mode === "time") {
+        currentDate.setHours(
+          selectedDate.getHours(),
+          selectedDate.getMinutes(),
+        );
+        setDate(currentDate);
+      }
+    }
+
+    // Hide picker on iOS or after time selection on Android
+    if (Platform.OS === "ios" || mode === "time") {
+      setShowPicker(false);
+    }
+  };
+
+  const handleAddReminder = async () => {
+    if (!title) {
+      alert("Please enter a title");
+      return;
+    }
+
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+  };
 
   //"HTML"
   return (
@@ -97,11 +104,19 @@ export default function EditReminder() {
         <View style={styles.card}>
           {/* title field of the reminder */}
           <Text style={styles.label}>Title</Text>
-          <TextInput style={styles.input} />
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+          />
 
           {/* description field of the reminder */}
           <Text style={styles.label}>Description (optional)</Text>
-          <TextInput style={styles.inputDesc} />
+          <TextInput
+            style={styles.inputDesc}
+            value={description}
+            onChangeText={setDescription}
+          />
 
           {/* date selector for the reminder */}
           <Text style={styles.label}>Date & Time</Text>
@@ -137,11 +152,9 @@ export default function EditReminder() {
 
             <TouchableOpacity
               style={styles.addBtn}
-              // onPress={() => saveEditedReminder(id, newText)}
+              onPress={saveEditedReminder}
             >
-              <Link href="/">
                 <Text>Edit Reminder</Text>
-              </Link>
             </TouchableOpacity>
           </View>
         </View>
