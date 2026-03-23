@@ -26,7 +26,7 @@ export default function EditReminder() {
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useSearchParams(); // id of reminder to edit
 
-  //edit reminder data on load
+  //load reminder data on mount
   useEffect(() => {
     const loadReminder = async () => {
       const json = await AsyncStorage.getItem("reminders");
