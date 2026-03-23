@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   },
   addWrap: {
     position: "absolute",
-    bottom: 40,
+    bottom: 40, 
     right: 25,
   },
 });

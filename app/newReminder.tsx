@@ -62,10 +62,7 @@ export default function NewReminder() {
   };
 
   // Handle date/time change
-  const onChangeDate = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ) => {
+  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (event.type === "set" && selectedDate) {
       const currentDate = new Date(date);
 
@@ -73,7 +70,7 @@ export default function NewReminder() {
         currentDate.setFullYear(
           selectedDate.getFullYear(),
           selectedDate.getMonth(),
-          selectedDate.getDate()
+          selectedDate.getDate(),
         );
         setDate(currentDate);
 
@@ -83,7 +80,7 @@ export default function NewReminder() {
       } else {
         currentDate.setHours(
           selectedDate.getHours(),
-          selectedDate.getMinutes()
+          selectedDate.getMinutes(),
         );
         setDate(currentDate);
       }
@@ -141,14 +138,13 @@ export default function NewReminder() {
     }
 
     // ✅ Schedule notification
-    const notificationId =
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body: description || "Reminder",
-        },
-        trigger,
-      });
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body: description || "Reminder",
+      },
+      trigger,
+    });
 
     // ✅ Save reminder
     const newReminder = {
