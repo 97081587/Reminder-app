@@ -94,6 +94,31 @@ export default function EditReminder() {
     }
   };
 
+  //save edited reminder
+  const saveEditedReminder = async () => {
+    if (!title) {
+      alert("Please enter a title");
+      return;
+    }
+
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+
+    const json = await AsyncStorage.getItem("reminders");
+    const reminders = json ? JSON.parse(json) : [];
+
+    const updated = reminders.map((r) =>
+      r.id === Number(id)
+        ? { ...r, text: title, description, date: date.toISOString() }
+        : r,
+    );
+
+    await AsyncStorage.setItem("reminders", JSON.stringify(updated));
+    router.push("/"); // back to home
+  };
+
   //"HTML"
   return (
     <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
@@ -154,7 +179,7 @@ export default function EditReminder() {
               style={styles.addBtn}
               onPress={saveEditedReminder}
             >
-                <Text>Edit Reminder</Text>
+              <Text>Edit Reminder</Text>
             </TouchableOpacity>
           </View>
         </View>
