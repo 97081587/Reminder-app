@@ -7,6 +7,8 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
 // ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -34,6 +37,13 @@ export default function NewReminder() {
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
+
+  const repeatOptions: ("none" | "daily" | "weekly")[] = [
+    "none",
+    "daily",
+    "weekly",
+  ];
 
   // ✅ Android notification channel
   useEffect(() => {
@@ -140,7 +150,7 @@ export default function NewReminder() {
         trigger,
       });
 
-    // ✅ Save reminder (IMPORTANT for team)
+    // ✅ Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title,
@@ -155,10 +165,7 @@ export default function NewReminder() {
 
     reminders.push(newReminder);
 
-    await AsyncStorage.setItem(
-      "reminders",
-      JSON.stringify(reminders)
-    );
+    await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
     alert("Reminder saved!");
     router.back(); // go back to list screen
@@ -181,11 +188,11 @@ export default function NewReminder() {
 
             <Text style={styles.label}>Description</Text>
             <TextInput
- style={styles.textArea}
-  value={description}
-  onChangeText={setDescription}
-   multiline
- placeholder="Enter description"
+              style={styles.textArea}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              placeholder="Enter description"
             />
 
             <Text style={styles.label}>Date & Time</Text>
@@ -212,26 +219,67 @@ export default function NewReminder() {
             )}
 
             <Text style={styles.label}>Repeat</Text>
-            <View style={styles.repeatRow}>
-              {["none", "daily", "weekly"].map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={[
-                    styles.repeatBtn,
-                    repeat === item && styles.activeBtn,
-                  ]}
-                  onPress={() => setRepeat(item as any)}
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: "center" }]}
+              onPress={() => setRepeatPickerVisible(true)}
+            >
+              <Text>{repeat}</Text>
+            </TouchableOpacity>
+
+            <Modal
+              transparent
+              visible={repeatPickerVisible}
+              animationType="fade"
+              onRequestClose={() => setRepeatPickerVisible(false)}
+            >
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                activeOpacity={1}
+                onPressOut={() => setRepeatPickerVisible(false)}
+              >
+                <View
+                  style={{
+                    width: 200,
+                    backgroundColor: "white",
+                    borderRadius: 10,
+                    padding: 10,
+                  }}
                 >
-                  <Text
-                    style={{
-                      color: repeat === item ? "white" : "black",
-                    }}
-                  >
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  <FlatList
+                    data={repeatOptions}
+                    keyExtractor={(item) => item}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={{
+                          padding: 10,
+                          backgroundColor:
+                            item === repeat ? "#2f9e6f" : "white",
+                          borderRadius: 5,
+                          marginVertical: 5,
+                        }}
+                        onPress={() => {
+                          setRepeat(item);
+                          setRepeatPickerVisible(false);
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: item === repeat ? "white" : "black",
+                          }}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Modal>
 
             <View style={styles.buttonRow}>
               <TouchableOpacity
