@@ -14,7 +14,35 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  // useEffect(() => {}, [reminders]);
+  const REMINDERS_KEY = "reminders";
+
+  // Load all reminders
+  const loadReminders = async () => {
+    try {
+      const json = await AsyncStorage.getItem(REMINDERS_KEY);
+      return json != null ? JSON.parse(json) : [];
+    } catch (e) {
+      console.log("Error loading reminders:", e);
+      return [];
+    }
+  };
+
+  // Save reminders array
+  const saveReminders = async (data) => {
+    try {
+      await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.log("Error saving reminders:", e);
+    }
+  };
+
+  // Delete a reminder by id
+  const removeReminder = async (id) => {
+    const reminders = await loadReminders();
+    const updated = reminders.filter((r) => r.id !== id);
+    await saveReminders(updated);
+    return updated;
+  };
 
   return (
     <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
@@ -59,7 +87,7 @@ const styles = StyleSheet.create({
   },
   addWrap: {
     position: "absolute",
-    bottom: 40, 
+    bottom: 40,
     right: 25,
   },
 });
