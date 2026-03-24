@@ -76,6 +76,7 @@ export default function NewReminder() {
 
         if (Platform.OS === "android") {
           showMode("time"); // open time picker automatically
+          return;
         }
       } else {
         currentDate.setHours(
