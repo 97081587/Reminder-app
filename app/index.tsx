@@ -9,7 +9,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { getReminders, deleteReminder } from "@/storage/reminders.js";
+import { getReminders, deleteReminder } from "../src/storage/reminders";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
@@ -65,13 +65,6 @@ export default function Home() {
             <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
-
-        {/* temporary button to edit reminder */}
-        <TouchableOpacity style={{ marginTop: 10 }}>
-          <Link href="/editReminder">
-            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
-          </Link>
-        </TouchableOpacity>
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>
