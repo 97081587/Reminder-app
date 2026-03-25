@@ -10,7 +10,7 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { editReminder } from "@/src/storage/reminders";
+import { editReminder, getReminders } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -18,7 +18,6 @@ import { useLocalSearchParams } from "expo-router";
 
 export default function EditReminder() {
   const router = useRouter();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
@@ -64,10 +63,18 @@ export default function EditReminder() {
     }
   };
 
-  const handleAddReminder = async () => {
+  const saveEditedReminder = async () => {
     if (!title) {
       alert("Please enter a title");
       return;
+
+        // Assuming you passed the reminder id via params
+        const { id } = useLocalSearchParams();
+
+        const updatedReminders = await editReminder(Number(id), title);
+
+        // Go back to the previous screen (Home)
+        router.back();
     }
 
     if (date < new Date()) {
