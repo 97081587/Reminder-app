@@ -10,38 +10,19 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { editReminder, getReminders } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 export default function EditReminder() {
   const router = useRouter();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
-  const { id } = useSearchParams(); // id of reminder to edit
-
-  //load reminder data on mount
-  useEffect(() => {
-    const loadReminder = async () => {
-      const json = await AsyncStorage.getItem("reminders");
-      const reminders = json ? JSON.parse(json) : [];
-
-      const reminder = reminders.find((r) => r.id === Number(id));
-      if (reminder) {
-        setTitle(reminder.text);
-        setDescription(reminder.description || "");
-        setDate(new Date(reminder.date));
-      }
-    };
-
-    loadReminder();
-  }, [id]);
 
   // Open picker
   const showMode = (currentMode: "date" | "time") => {
@@ -82,10 +63,18 @@ export default function EditReminder() {
     }
   };
 
-  const handleAddReminder = async () => {
+  const saveEditedReminder = async () => {
     if (!title) {
       alert("Please enter a title");
       return;
+
+        // Assuming you passed the reminder id via params
+        const { id } = useLocalSearchParams();
+
+        const updatedReminders = await editReminder(Number(id), title);
+
+        // Go back to the previous screen (Home)
+        router.back();
     }
 
     if (date < new Date()) {
@@ -94,29 +83,13 @@ export default function EditReminder() {
     }
   };
 
-  //save edited reminder
-  const saveEditedReminder = async () => {
-    if (!title) {
-      alert("Please enter a title");
-      return;
+    // Example handler
+  const handleEdit = async (id) => {
+    const newText = prompt("Update your reminder:", ""); // simple prompt
+    if (newText) {
+      const updated = await editReminder(id, newText);
+      setReminders(updated);
     }
-
-    if (date < new Date()) {
-      alert("Please select a future date and time");
-      return;
-    }
-
-    const json = await AsyncStorage.getItem("reminders");
-    const reminders = json ? JSON.parse(json) : [];
-
-    const updated = reminders.map((r) =>
-      r.id === Number(id)
-        ? { ...r, text: title, description, date: date.toISOString() }
-        : r,
-    );
-
-    await AsyncStorage.setItem("reminders", JSON.stringify(updated));
-    router.push("/"); // back to home
   };
 
   //"HTML"
@@ -169,10 +142,9 @@ export default function EditReminder() {
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelBtn}>
-              <Link href="/">
+            <TouchableOpacity style={styles.cancelBtn}
+            onPress={() => router.back()}>
                 <Text>Cancel</Text>
-              </Link>
             </TouchableOpacity>
 
             <TouchableOpacity
