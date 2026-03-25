@@ -32,7 +32,7 @@ export default function Home() {
     return (
       <View
         style={{
-          width: "85%",
+          width: "200%",
           backgroundColor: "rgba(255,255,255,0.3)",
           borderRadius: 30,
           padding: 25,
@@ -40,11 +40,11 @@ export default function Home() {
       >
         <Text>{item.text}</Text>
         <TouchableOpacity onPress={() => onDelete(item.id)}>
-          <Text style={{ color: "red", marginTop: 5 }}>🗑️</Text>
+          <Text>🗑️</Text>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href={`/editReminder?id=${item.id}`}>
-            <Text style={{ color: "blue", marginTop: 5 }}>✏️</Text>
+            <Text>✏️</Text>
           </Link>
         </TouchableOpacity>
       </View>
