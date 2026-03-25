@@ -10,7 +10,7 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { editReminder } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -24,24 +24,6 @@ export default function EditReminder() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
-  const { id } = useLocalSearchParams(); // id of reminder to edit
-
-  //load reminder data on mount
-  useEffect(() => {
-    const loadReminder = async () => {
-      const json = await AsyncStorage.getItem("reminders");
-      const reminders = json ? JSON.parse(json) : [];
-
-      const reminder = reminders.find((r) => r.id === Number(id));
-      if (reminder) {
-        setTitle(reminder.text);
-        setDescription(reminder.description || "");
-        setDate(new Date(reminder.date));
-      }
-    };
-
-    loadReminder();
-  }, [id]);
 
   // Open picker
   const showMode = (currentMode: "date" | "time") => {
@@ -94,29 +76,13 @@ export default function EditReminder() {
     }
   };
 
-  //save edited reminder
-  const saveEditedReminder = async () => {
-    if (!title) {
-      alert("Please enter a title");
-      return;
+    // Example handler
+  const handleEdit = async (id) => {
+    const newText = prompt("Update your reminder:", ""); // simple prompt
+    if (newText) {
+      const updated = await editReminder(id, newText);
+      setReminders(updated);
     }
-
-    if (date < new Date()) {
-      alert("Please select a future date and time");
-      return;
-    }
-
-    const json = await AsyncStorage.getItem("reminders");
-    const reminders = json ? JSON.parse(json) : [];
-
-    const updated = reminders.map((r) =>
-      r.id === Number(id)
-        ? { ...r, text: title, description, date: date.toISOString() }
-        : r,
-    );
-
-    await AsyncStorage.setItem("reminders", JSON.stringify(updated));
-    router.push("/"); // back to home
   };
 
   //"HTML"
