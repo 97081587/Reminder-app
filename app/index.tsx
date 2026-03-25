@@ -9,39 +9,47 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getReminders, deleteReminder } from "@/storage/reminders.js";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  const REMINDERS_KEY = "reminders";
+  useEffect(() => {
+    const load = async () => {
+      const data = await getReminders();
+      setReminders(data);
+    };
+    load();
+  }, []);
 
-  // Load all reminders
-  const loadReminders = async () => {
-    try {
-      const json = await AsyncStorage.getItem(REMINDERS_KEY);
-      return json != null ? JSON.parse(json) : [];
-    } catch (e) {
-      console.log("Error loading reminders:", e);
-      return [];
-    }
+  const handleDelete = async (id) => {
+    const updated = await deleteReminder(id);
+    setReminders(updated);
   };
 
-  // Save reminders array
-  const saveReminders = async (data) => {
-    try {
-      await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.log("Error saving reminders:", e);
-    }
-  };
-
-  // Delete a reminder by id
-  const removeReminder = async (id) => {
-    const reminders = await loadReminders();
-    const updated = reminders.filter((r) => r.id !== id);
-    await saveReminders(updated);
-    return updated;
+  //reminder cards
+  const ReminderCard = ({ item, onDelete }) => {
+    return (
+      <View
+        style={{
+          backgroundColor: "#fff",
+          padding: 15,
+          marginVertical: 5,
+          borderRadius: 10,
+          width: 300,
+        }}
+      >
+        <Text>{item.text}</Text>
+        <TouchableOpacity onPress={() => onDelete(item.id)}>
+          <Text style={{ color: "red", marginTop: 5 }}>Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Link href={`/editReminder?id=${item.id}`}>
+            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
+          </Link>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
@@ -57,6 +65,13 @@ export default function Home() {
             <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
+
+        {/* temporary button to edit reminder */}
+        <TouchableOpacity style={{ marginTop: 10 }}>
+          <Link href="/editReminder">
+            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
+          </Link>
+        </TouchableOpacity>
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>

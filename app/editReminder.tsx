@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, Link } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function EditReminder() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
-  const { id } = useSearchParams(); // id of reminder to edit
+  const { id } = useLocalSearchParams(); // id of reminder to edit
 
   //load reminder data on mount
   useEffect(() => {
@@ -169,10 +169,9 @@ export default function EditReminder() {
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelBtn}>
-              <Link href="/">
+            <TouchableOpacity style={styles.cancelBtn}
+            onPress={() => router.back()}>
                 <Text>Cancel</Text>
-              </Link>
             </TouchableOpacity>
 
             <TouchableOpacity
