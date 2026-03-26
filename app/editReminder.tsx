@@ -23,6 +23,7 @@ export default function EditReminder() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
+  const { id } = useLocalSearchParams();
 
   // Open picker
   const showMode = (currentMode: "date" | "time") => {
@@ -63,25 +64,20 @@ export default function EditReminder() {
     }
   };
 
-  // Save edited reminder    
-  
-   // Assuming you passed the reminder id via params
-  const { id } = useLocalSearchParams();
-
+  // Save edited reminder
   const saveEditedReminder = async () => {
     // if (!title) {
     //   alert("Please enter a title");
     //   return;
     //   }
 
-        await editReminder(Number(id), {
-          text: title,
-          description,
-          date: date.toISOString(),
-        });
+    await editReminder(Number(id), {
+      text: title,
+      description,
+      date: date.toISOString(),
+    });
 
-        router.back();
-    };
+    router.back();
 
     if (date < new Date()) {
       alert("Please select a future date and time");
@@ -91,8 +87,6 @@ export default function EditReminder() {
 
   // Load existing reminder data on mount
   useEffect(() => {
-    const { id } = useLocalSearchParams();
-
     const loadReminder = async () => {
       const reminders = await getReminders();
       const reminder = reminders.find((r) => r.id === Number(id));
@@ -156,9 +150,11 @@ export default function EditReminder() {
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelBtn}
-            onPress={() => router.back()}>
-                <Text>Cancel</Text>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => router.back()}
+            >
+              <Text>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
