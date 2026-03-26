@@ -55,11 +55,11 @@ export const toggleReminder = async (id) => {
 };
 
 // Edit reminder text
-export const editReminder = async (id, newText) => {
+export const editReminder = async (id, updatedFields) => {
   const reminders = await getReminders();
 
   const updated = reminders.map((r) =>
-    r.id === id ? { ...r, text: newText } : r
+    r.id === id ? { ...r, ...updatedFields } : r
   );
 
   await saveReminders(updated);

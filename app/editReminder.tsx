@@ -63,19 +63,25 @@ export default function EditReminder() {
     }
   };
 
+  // Save edited reminder    
+  
+   // Assuming you passed the reminder id via params
+  const { id } = useLocalSearchParams();
+
   const saveEditedReminder = async () => {
-    if (!title) {
-      alert("Please enter a title");
-      return;
+    // if (!title) {
+    //   alert("Please enter a title");
+    //   return;
+    //   }
 
-        // Assuming you passed the reminder id via params
-        const { id } = useLocalSearchParams();
+        await editReminder(Number(id), {
+          text: title,
+          description,
+          date: date.toISOString(),
+        });
 
-        const updatedReminders = await editReminder(Number(id), title);
-
-        // Go back to the previous screen (Home)
         router.back();
-    }
+    };
 
     if (date < new Date()) {
       alert("Please select a future date and time");
@@ -83,14 +89,22 @@ export default function EditReminder() {
     }
   };
 
-    // Example handler
-  const handleEdit = async (id) => {
-    const newText = prompt("Update your reminder:", ""); // simple prompt
-    if (newText) {
-      const updated = await editReminder(id, newText);
-      setReminders(updated);
-    }
-  };
+  // Load existing reminder data on mount
+  useEffect(() => {
+    const { id } = useLocalSearchParams();
+
+    const loadReminder = async () => {
+      const reminders = await getReminders();
+      const reminder = reminders.find((r) => r.id === Number(id));
+      if (reminder) {
+        setTitle(reminder.text || "");
+        setDescription(reminder.description || "");
+        setDate(reminder.date ? new Date(reminder.date) : new Date());
+      }
+    };
+
+    loadReminder();
+  }, []);
 
   //"HTML"
   return (

@@ -65,7 +65,7 @@ export default function Home() {
           )}
         />
 
-                {/* temporary button to edit reminder */}
+        {/* temporary button to edit reminder */}
         <TouchableOpacity style={{ marginTop: 10 }}>
           <Link href="/editReminder">
             <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
