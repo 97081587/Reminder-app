@@ -54,6 +54,7 @@ export const toggleReminder = async (id) => {
   return updated;
 };
 
+// Edit reminder text
 export const editReminder = async (id, newText) => {
   const reminders = await getReminders();
 
