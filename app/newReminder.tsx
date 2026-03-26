@@ -18,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { addReminder } from "@/src/storage/reminders";
 
 // ✅ Notification handler
 Notifications.setNotificationHandler({
