@@ -56,13 +56,11 @@ export default function NewReminder() {
     }
   }, []);
 
-  // Open picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
   };
 
-  // Handle date/time change
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (event.type === "set" && selectedDate) {
       const currentDate = new Date(date);
@@ -71,18 +69,18 @@ export default function NewReminder() {
         currentDate.setFullYear(
           selectedDate.getFullYear(),
           selectedDate.getMonth(),
-          selectedDate.getDate(),
+          selectedDate.getDate()
         );
         setDate(currentDate);
 
         if (Platform.OS === "android") {
-          showMode("time"); // open time picker automatically
+          showMode("time");
           return;
         }
       } else {
         currentDate.setHours(
           selectedDate.getHours(),
-          selectedDate.getMinutes(),
+          selectedDate.getMinutes()
         );
         setDate(currentDate);
       }
@@ -90,7 +88,7 @@ export default function NewReminder() {
     setShowPicker(false);
   };
 
-  // ✅ Main function
+  // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
@@ -102,7 +100,7 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ Permissions
+    // Permissions
     const { status } = await Notifications.getPermissionsAsync();
     let finalStatus = status;
 
@@ -117,29 +115,48 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ Trigger logic (repeat support)
-    let trigger: any;
+    // ✅ CROSS-PLATFORM TRIGGER FIX
+    let trigger: Notifications.NotificationTriggerInput;
 
     if (repeat === "daily") {
-      trigger = {
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
     } else if (repeat === "weekly") {
-      trigger = {
-        weekday: date.getDay() + 1, // Expo: 1 = Sunday
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24 * 7,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          weekday: date.getDay() + 1,
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
     } else {
       trigger = {
+        type: "date",
         date: new Date(date),
       };
     }
 
-    // ✅ Schedule notification
+    // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -148,7 +165,7 @@ export default function NewReminder() {
       trigger,
     });
 
-    // ✅ Save reminder
+    // Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title,
@@ -166,7 +183,7 @@ export default function NewReminder() {
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
     alert("Reminder saved!");
-    router.back(); // go back to list screen
+    router.back();
   };
 
   return (
@@ -231,35 +248,20 @@ export default function NewReminder() {
               onRequestClose={() => setRepeatPickerVisible(false)}
             >
               <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+                style={styles.modalOverlay}
                 activeOpacity={1}
                 onPressOut={() => setRepeatPickerVisible(false)}
               >
-                <View
-                  style={{
-                    width: 200,
-                    backgroundColor: "white",
-                    borderRadius: 10,
-                    padding: 10,
-                  }}
-                >
+                <View style={styles.modalContent}>
                   <FlatList
                     data={repeatOptions}
                     keyExtractor={(item) => item}
                     renderItem={({ item }) => (
                       <TouchableOpacity
-                        style={{
-                          padding: 10,
-                          backgroundColor:
-                            item === repeat ? "#2f9e6f" : "white",
-                          borderRadius: 5,
-                          marginVertical: 5,
-                        }}
+                        style={[
+                          styles.option,
+                          item === repeat && styles.activeOption,
+                        ]}
                         onPress={() => {
                           setRepeat(item);
                           setRepeatPickerVisible(false);
@@ -324,19 +326,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
   },
-  repeatRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  repeatBtn: {
-    padding: 10,
-    backgroundColor: "#eee",
-    borderRadius: 20,
-  },
-  activeBtn: {
-    backgroundColor: "#2f9e6f",
-  },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -357,5 +346,25 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 200,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 10,
+  },
+  option: {
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  activeOption: {
+    backgroundColor: "#2f9e6f",
   },
 });
