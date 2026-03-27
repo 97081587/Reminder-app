@@ -9,12 +9,47 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getReminders, deleteReminder } from "../src/storage/reminders";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  // useEffect(() => {}, [reminders]);
+  useEffect(() => {
+    const load = async () => {
+      const data = await getReminders();
+      setReminders(data);
+    };
+    load();
+  }, []);
+
+  const handleDelete = async (id) => {
+    const updated = await deleteReminder(id);
+    setReminders(updated);
+  };
+
+  //reminder cards
+  const ReminderCard = ({ item, onDelete }) => {
+    return (
+      <View
+        style={{
+          width: "200%",
+          backgroundColor: "rgba(255,255,255,0.3)",
+          borderRadius: 30,
+          padding: 25,
+        }}
+      >
+        <Text>{item.text}</Text>
+        <TouchableOpacity onPress={() => onDelete(item.id)}>
+          <Text>🗑️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Link href={`/editReminder?id=${item.id}`}>
+            <Text>✏️</Text>
+          </Link>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
@@ -29,6 +64,13 @@ export default function Home() {
             <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
+
+        {/* temporary button to edit reminder */}
+        <TouchableOpacity style={{ marginTop: 10 }}>
+          <Link href="/editReminder">
+            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
+          </Link>
+        </TouchableOpacity>
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>
@@ -59,7 +101,7 @@ const styles = StyleSheet.create({
   },
   addWrap: {
     position: "absolute",
-    bottom: 40, 
+    bottom: 40,
     right: 25,
   },
 });
