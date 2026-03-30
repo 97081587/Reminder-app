@@ -47,10 +47,6 @@ export default function NewReminder() {
     "weekly",
   ];
 
-  const addReminder = async () => {
-    
-  }
-
   // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -104,6 +100,15 @@ export default function NewReminder() {
       alert("Please select a future date and time");
       return;
     }
+    
+    await addReminder({
+      text: title,
+      description,
+      date: date.toISOString(),
+    });
+
+    router.back(); // go back to Home
+    };
 
     // Permissions
     const { status } = await Notifications.getPermissionsAsync();
