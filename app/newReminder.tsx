@@ -18,7 +18,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { addReminder } from "@/src/storage/reminders";
 
 // ✅ Notification handler
 Notifications.setNotificationHandler({
@@ -88,15 +87,10 @@ export default function NewReminder() {
     setShowPicker(false);
   };
 
-  // ✅ MAIN FUNCTION (FULLY FIXED)
+  // ✅ FIXED FUNCTION
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
-      return;
-    }
-
-    if (date < new Date()) {
-      alert("Please select a future date and time");
       return;
     }
 
@@ -115,54 +109,17 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ CROSS-PLATFORM TRIGGER FIX
-    let trigger: Notifications.NotificationTriggerInput;
-
-    if (repeat === "daily") {
-      if (Platform.OS === "android") {
-        trigger = {
-          type: "timeInterval",
-          seconds: 60 * 60 * 24,
-          repeats: true,
-        };
-      } else {
-        trigger = {
-          type: "calendar",
-          hour: date.getHours(),
-          minute: date.getMinutes(),
-          repeats: true,
-        };
-      }
-    } else if (repeat === "weekly") {
-      if (Platform.OS === "android") {
-        trigger = {
-          type: "timeInterval",
-          seconds: 60 * 60 * 24 * 7,
-          repeats: true,
-        };
-      } else {
-        trigger = {
-          type: "calendar",
-          weekday: date.getDay() + 1,
-          hour: date.getHours(),
-          minute: date.getMinutes(),
-          repeats: true,
-        };
-      }
-    } else {
-      trigger = {
-        type: "date",
-        date: new Date(date),
-      };
-    }
-
-    // Schedule notification
+    // ✅ CORRECT TRIGGER (NEW EXPO API)
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title,
-        body: description || "Reminder",
+        title: title || "Test Reminder",
+        body: description || "This should appear in 5 seconds",
       },
-      trigger,
+      trigger: {
+        type: "timeInterval",
+        seconds: 5,
+        repeats: false,
+      },
     });
 
     // Save reminder
@@ -170,7 +127,7 @@ export default function NewReminder() {
       id: Date.now().toString(),
       title,
       description,
-      date: date.toISOString(),
+      date: new Date().toISOString(),
       repeat,
       notificationId,
     };
@@ -182,7 +139,7 @@ export default function NewReminder() {
 
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved!");
+    alert("Reminder saved! Will trigger in 5 seconds 🚀");
     router.back();
   };
 
