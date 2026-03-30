@@ -34,8 +34,10 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
-  const [mode, setMode] = useState<"date" | "time">("date");
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
@@ -55,39 +57,39 @@ export default function NewReminder() {
     }
   }, []);
 
-  const showMode = (currentMode: "date" | "time") => {
-    setMode(currentMode);
-    setShowPicker(true);
-  };
-
+  // ✅ DATE CHANGE
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "set" && selectedDate) {
-      const currentDate = new Date(date);
-
-      if (mode === "date") {
-        currentDate.setFullYear(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate()
-        );
-        setDate(currentDate);
-
-        if (Platform.OS === "android") {
-          showMode("time");
-          return;
-        }
-      } else {
-        currentDate.setHours(
-          selectedDate.getHours(),
-          selectedDate.getMinutes()
-        );
-        setDate(currentDate);
-      }
+    if (selectedDate) {
+      const newDate = new Date(date);
+      newDate.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      );
+      setDate(newDate);
     }
-    setShowPicker(false);
+
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+      setShowTimePicker(true); // open time picker after date
+    }
   };
 
-  // ✅ FIXED FUNCTION
+  // ✅ TIME CHANGE
+  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
+    if (selectedTime) {
+      const newDate = new Date(date);
+      newDate.setHours(
+        selectedTime.getHours(),
+        selectedTime.getMinutes()
+      );
+      setDate(newDate);
+    }
+
+    setShowTimePicker(false);
+  };
+
+  // ✅ ADD REMINDER
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
@@ -109,7 +111,7 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ CORRECT TRIGGER (NEW EXPO API)
+    // ✅ FIXED TRIGGER (EXPO NEW API)
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: title || "Test Reminder",
@@ -127,7 +129,7 @@ export default function NewReminder() {
       id: Date.now().toString(),
       title,
       description,
-      date: new Date().toISOString(),
+      date: date.toISOString(),
       repeat,
       notificationId,
     };
@@ -139,7 +141,7 @@ export default function NewReminder() {
 
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved! Will trigger in 5 seconds 🚀");
+    alert("Reminder saved! Fires in 5 seconds 🚀");
     router.back();
   };
 
@@ -167,13 +169,20 @@ export default function NewReminder() {
               placeholder="Enter description"
             />
 
-            <Text style={styles.label}>Date & Time</Text>
+            <Text style={styles.label}>Date</Text>
             <TouchableOpacity
               style={styles.input}
-              onPress={() => showMode("date")}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text>{date.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Time</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowTimePicker(true)}
             >
               <Text>
-                {date.toLocaleDateString()}{" "}
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -181,12 +190,41 @@ export default function NewReminder() {
               </Text>
             </TouchableOpacity>
 
-            {showPicker && (
+            {/* ✅ iOS Pickers (INLINE) */}
+            {Platform.OS === "ios" && showDatePicker && (
               <DateTimePicker
                 value={date}
-                mode={mode}
+                mode="date"
+                display="inline"
+                onChange={onChangeDate}
+              />
+            )}
+
+            {Platform.OS === "ios" && showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                display="spinner"
+                onChange={onChangeTime}
+              />
+            )}
+
+            {/* ✅ Android Pickers */}
+            {Platform.OS === "android" && showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
                 display="default"
                 onChange={onChangeDate}
+              />
+            )}
+
+            {Platform.OS === "android" && showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                display="default"
+                onChange={onChangeTime}
               />
             )}
 
