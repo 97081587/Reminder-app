@@ -20,6 +20,7 @@ import {
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { addReminder } from "@/src/storage/reminders";
 
+
 // ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -45,6 +46,10 @@ export default function NewReminder() {
     "daily",
     "weekly",
   ];
+
+  const addReminder = async () => {
+    
+  }
 
   // ✅ Android notification channel
   useEffect(() => {
