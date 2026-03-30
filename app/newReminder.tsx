@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+
 // ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -95,6 +96,20 @@ export default function NewReminder() {
       alert("Please enter a title");
       return;
     }
+
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+    
+    await addReminder({
+      text: title,
+      description,
+      date: date.toISOString(),
+    });
+
+    router.back(); // go back to Home
+    };
 
     // Permissions
     const { status } = await Notifications.getPermissionsAsync();

@@ -24,15 +24,19 @@ export const saveReminders = async (reminders) => {
 };
 
 // Add a new reminder
-export const addReminder = async (text) => {
+export const addReminder = async (reminder) => {
   const reminders = await getReminders();
+
   const newReminder = {
     id: Date.now(),
-    text,
-    done: false,
+    text: reminder.text,
+    description: reminder.description || "",
+    date: reminder.date,
   };
+
   const updated = [...reminders, newReminder];
   await saveReminders(updated);
+
   return updated;
 };
 
