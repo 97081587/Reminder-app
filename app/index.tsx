@@ -65,14 +65,6 @@ export default function Home() {
             <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
-        {/* <ReminderCard item={{ text: "Sample Reminder" }} onDelete={() => {}} /> */}
-
-        {/* temporary button to edit reminder */}
-        <TouchableOpacity style={{ marginTop: 10 }}>
-          <Link href="/editReminder">
-            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
-          </Link>
-        </TouchableOpacity>
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>
