@@ -89,7 +89,7 @@ export default function EditReminder() {
   useEffect(() => {
     const loadReminder = async () => {
       const reminders = await getReminders();
-      const reminder = reminders.find((r) => r.id === Number(id));
+      const reminder = reminders.find((r: any) => r.id === Number(id));
       if (reminder) {
         setTitle(reminder.text || "");
         setDescription(reminder.description || "");

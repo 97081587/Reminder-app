@@ -18,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { addReminder } from "@/src/storage/reminders";
 
 
 // ✅ Notification handler
@@ -35,10 +36,8 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
+  const [showPicker, setShowPicker] = useState(false);
+  const [mode, setMode] = useState<"date" | "time">("date");
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
@@ -58,39 +57,39 @@ export default function NewReminder() {
     }
   }, []);
 
-  // ✅ DATE CHANGE
+  const showMode = (currentMode: "date" | "time") => {
+    setMode(currentMode);
+    setShowPicker(true);
+  };
+
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) {
-      const newDate = new Date(date);
-      newDate.setFullYear(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      setDate(newDate);
-    }
+    if (event.type === "set" && selectedDate) {
+      const currentDate = new Date(date);
 
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-      setShowTimePicker(true); // open time picker after date
+      if (mode === "date") {
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        );
+        setDate(currentDate);
+
+        if (Platform.OS === "android") {
+          showMode("time");
+          return;
+        }
+      } else {
+        currentDate.setHours(
+          selectedDate.getHours(),
+          selectedDate.getMinutes()
+        );
+        setDate(currentDate);
+      }
     }
+    setShowPicker(false);
   };
 
-  // ✅ TIME CHANGE
-  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    if (selectedTime) {
-      const newDate = new Date(date);
-      newDate.setHours(
-        selectedTime.getHours(),
-        selectedTime.getMinutes()
-      );
-      setDate(newDate);
-    }
-
-    setShowTimePicker(false);
-  };
-
-  // ✅ ADD REMINDER
+  // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
@@ -101,15 +100,14 @@ export default function NewReminder() {
       alert("Please select a future date and time");
       return;
     }
-    
-    await addReminder({
+      await addReminder({
       text: title,
       description,
       date: date.toISOString(),
     });
 
     router.back(); // go back to Home
-    };
+  
 
     // Permissions
     const { status } = await Notifications.getPermissionsAsync();
@@ -126,17 +124,54 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ FIXED TRIGGER (EXPO NEW API)
+    // ✅ CROSS-PLATFORM TRIGGER FIX
+    let trigger: Notifications.NotificationTriggerInput;
+
+    if (repeat === "daily") {
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
+    } else if (repeat === "weekly") {
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24 * 7,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          weekday: date.getDay() + 1,
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
+    } else {
+      trigger = {
+        type: "date",
+        date: new Date(date),
+      };
+    }
+
+    // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: title || "Test Reminder",
-        body: description || "This should appear in 5 seconds",
+        title,
+        body: description || "Reminder",
       },
-      trigger: {
-        type: "timeInterval",
-        seconds: 5,
-        repeats: false,
-      },
+      trigger,
     });
 
     // Save reminder
@@ -156,7 +191,7 @@ export default function NewReminder() {
 
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved! Fires in 5 seconds 🚀");
+    alert("Reminder saved!");
     router.back();
   };
 
@@ -184,20 +219,13 @@ export default function NewReminder() {
               placeholder="Enter description"
             />
 
-            <Text style={styles.label}>Date</Text>
+            <Text style={styles.label}>Date & Time</Text>
             <TouchableOpacity
               style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text>{date.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Time</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => showMode("date")}
             >
               <Text>
+                {date.toLocaleDateString()}{" "}
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -205,41 +233,12 @@ export default function NewReminder() {
               </Text>
             </TouchableOpacity>
 
-            {/* ✅ iOS Pickers (INLINE) */}
-            {Platform.OS === "ios" && showDatePicker && (
+            {showPicker && (
               <DateTimePicker
                 value={date}
-                mode="date"
-                display="inline"
-                onChange={onChangeDate}
-              />
-            )}
-
-            {Platform.OS === "ios" && showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                display="spinner"
-                onChange={onChangeTime}
-              />
-            )}
-
-            {/* ✅ Android Pickers */}
-            {Platform.OS === "android" && showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
+                mode={mode}
                 display="default"
                 onChange={onChangeDate}
-              />
-            )}
-
-            {Platform.OS === "android" && showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                display="default"
-                onChange={onChangeTime}
               />
             )}
 
