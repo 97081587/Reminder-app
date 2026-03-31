@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -41,13 +40,18 @@ export default function NewReminder() {
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
+  // 🔊 MULTIPLE SOUNDS
+  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
+  const [soundPickerVisible, setSoundPickerVisible] = useState(false);
+
+  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
+
   const repeatOptions: ("none" | "daily" | "weekly")[] = [
     "none",
     "daily",
     "weekly",
   ];
 
-  // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
@@ -57,7 +61,14 @@ export default function NewReminder() {
     }
   }, []);
 
-  // ✅ DATE CHANGE
+  const toggleSound = (sound: string) => {
+    if (selectedSounds.includes(sound)) {
+      setSelectedSounds(selectedSounds.filter((s) => s !== sound));
+    } else {
+      setSelectedSounds([...selectedSounds, sound]);
+    }
+  };
+
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (selectedDate) {
       const newDate = new Date(date);
@@ -71,11 +82,10 @@ export default function NewReminder() {
 
     if (Platform.OS === "android") {
       setShowDatePicker(false);
-      setShowTimePicker(true); // open time picker after date
+      setShowTimePicker(true);
     }
   };
 
-  // ✅ TIME CHANGE
   const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
     if (selectedTime) {
       const newDate = new Date(date);
@@ -89,14 +99,12 @@ export default function NewReminder() {
     setShowTimePicker(false);
   };
 
-  // ✅ ADD REMINDER
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
       return;
     }
 
-    // Permissions
     const { status } = await Notifications.getPermissionsAsync();
     let finalStatus = status;
 
@@ -111,26 +119,25 @@ export default function NewReminder() {
       return;
     }
 
-    // ✅ FIXED TRIGGER (EXPO NEW API)
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: title || "Test Reminder",
-        body: description || "This should appear in 5 seconds",
+        title,
+        body: description,
+        sound: "default", // ⚠️ Expo only supports one sound
       },
       trigger: {
-        type: "timeInterval",
         seconds: 5,
         repeats: false,
       },
     });
 
-    // Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title,
       description,
       date: date.toISOString(),
       repeat,
+      sounds: selectedSounds, // ✅ MULTIPLE SAVED
       notificationId,
     };
 
@@ -141,7 +148,7 @@ export default function NewReminder() {
 
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved! Fires in 5 seconds 🚀");
+    alert("Reminder saved 🚀");
     router.back();
   };
 
@@ -190,81 +197,65 @@ export default function NewReminder() {
               </Text>
             </TouchableOpacity>
 
-            {/* ✅ iOS Pickers (INLINE) */}
-            {Platform.OS === "ios" && showDatePicker && (
+            {showDatePicker && (
               <DateTimePicker
                 value={date}
                 mode="date"
-                display="inline"
                 onChange={onChangeDate}
               />
             )}
 
-            {Platform.OS === "ios" && showTimePicker && (
+            {showTimePicker && (
               <DateTimePicker
                 value={date}
                 mode="time"
-                display="spinner"
                 onChange={onChangeTime}
               />
             )}
 
-            {/* ✅ Android Pickers */}
-            {Platform.OS === "android" && showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={onChangeDate}
-              />
-            )}
+            {/* 🔊 MULTI SOUND BUTTON */}
+            <Text style={styles.label}>Sounds</Text>
 
-            {Platform.OS === "android" && showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                display="default"
-                onChange={onChangeTime}
-              />
-            )}
-
-            <Text style={styles.label}>Repeat</Text>
             <TouchableOpacity
-              style={[styles.input, { justifyContent: "center" }]}
-              onPress={() => setRepeatPickerVisible(true)}
+              style={styles.pillButton}
+              onPress={() => setSoundPickerVisible(true)}
             >
-              <Text>{repeat}</Text>
+              <Text>🔔</Text>
+              <Text>
+                {selectedSounds.length > 0
+                  ? selectedSounds.join(", ")
+                  : "Add Sound"}
+              </Text>
             </TouchableOpacity>
 
+            {/* SOUND MODAL */}
             <Modal
               transparent
-              visible={repeatPickerVisible}
+              visible={soundPickerVisible}
               animationType="fade"
-              onRequestClose={() => setRepeatPickerVisible(false)}
             >
               <TouchableOpacity
                 style={styles.modalOverlay}
-                activeOpacity={1}
-                onPressOut={() => setRepeatPickerVisible(false)}
+                onPressOut={() => setSoundPickerVisible(false)}
               >
                 <View style={styles.modalContent}>
                   <FlatList
-                    data={repeatOptions}
+                    data={soundOptions}
                     keyExtractor={(item) => item}
                     renderItem={({ item }) => (
                       <TouchableOpacity
                         style={[
                           styles.option,
-                          item === repeat && styles.activeOption,
+                          selectedSounds.includes(item) &&
+                            styles.activeOption,
                         ]}
-                        onPress={() => {
-                          setRepeat(item);
-                          setRepeatPickerVisible(false);
-                        }}
+                        onPress={() => toggleSound(item)}
                       >
                         <Text
                           style={{
-                            color: item === repeat ? "white" : "black",
+                            color: selectedSounds.includes(item)
+                              ? "white"
+                              : "black",
                           }}
                         >
                           {item}
@@ -320,6 +311,17 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 20,
     padding: 10,
+  },
+  pillButton: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 999,
+    paddingHorizontal: 15,
+    height: 40,
+    marginTop: 5,
+    alignSelf: "flex-start",
   },
   buttonRow: {
     flexDirection: "row",
