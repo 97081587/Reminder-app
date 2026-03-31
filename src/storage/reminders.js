@@ -38,7 +38,7 @@ export const addReminder = async (reminder) => {
   await saveReminders(updated);
 
   return updated;
-};
+};  
 
 // Delete a reminder
 export const deleteReminder = async (id) => {
