@@ -18,6 +18,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { addReminder } from "@/src/storage/reminders";
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -33,10 +35,8 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
+  const [showPicker, setShowPicker] = useState(false);
+  const [mode, setMode] = useState<"date" | "time">("date");
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
@@ -95,8 +95,7 @@ export default function NewReminder() {
       );
       setDate(newDate);
     }
-
-    setShowTimePicker(false);
+    setShowPicker(false);
   };
 
   const handleAddReminder = async () => {
@@ -129,6 +128,7 @@ export default function NewReminder() {
         seconds: 5,
         repeats: false,
       },
+      trigger,
     });
 
     const newReminder = {
@@ -176,20 +176,13 @@ export default function NewReminder() {
               placeholder="Enter description"
             />
 
-            <Text style={styles.label}>Date</Text>
+            <Text style={styles.label}>Date & Time</Text>
             <TouchableOpacity
               style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text>{date.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Time</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => showMode("date")}
             >
               <Text>
+                {date.toLocaleDateString()}{" "}
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
