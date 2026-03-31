@@ -10,7 +10,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { getReminders, deleteReminder } from "../src/storage/reminders";
-import ReminderCard from "../src/components/ReminderCard";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
