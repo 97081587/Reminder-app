@@ -8,8 +8,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getReminders, deleteReminder } from "../src/storage/reminders";
+import { useFocusEffect } from "expo-router";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
