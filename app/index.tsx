@@ -8,24 +8,38 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getReminders, deleteReminder } from "../src/storage/reminders";
+import { useFocusEffect } from "expo-router";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await getReminders();
-      setReminders(data);
-    };
-    load();
-  }, []);
+  //
+  // useEffect(() => {
+  //   const load = async () => {
+  //     const data = await getReminders();
+  //     setReminders(data);
+  //   };
+  //   load();
+  // }, []);
 
-  const handleDelete = async (id) => {
-    const updated = await deleteReminder(id);
-    setReminders(updated);
+  // const handleDelete = async (id) => {
+  //   const updated = await deleteReminder(id);
+  //   setReminders(updated);
+  // };
+
+  // Refresh reminders when screen is focused
+  const loadReminders = async () => {
+    const stored = await AsyncStorage.getItem("reminders");
+    setReminders(stored ? JSON.parse(stored) : []);
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadReminders();
+    }, []),
+  );
 
   //reminder cards
   const ReminderCard = ({ item, onDelete }) => {
