@@ -11,23 +11,10 @@ import { Link } from "expo-router";
 import { useEffect, useState, useCallback } from "react";
 import { getReminders, deleteReminder } from "../src/storage/reminders";
 import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
-
-  //
-  // useEffect(() => {
-  //   const load = async () => {
-  //     const data = await getReminders();
-  //     setReminders(data);
-  //   };
-  //   load();
-  // }, []);
-
-  // const handleDelete = async (id) => {
-  //   const updated = await deleteReminder(id);
-  //   setReminders(updated);
-  // };
 
   // Refresh reminders when screen is focused
   const loadReminders = async () => {
