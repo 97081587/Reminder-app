@@ -33,11 +33,9 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [repeat, setRepeat] = useState("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
   // 🔊 MULTIPLE SOUNDS
@@ -132,22 +130,12 @@ export default function NewReminder() {
         repeats: true,
       };
     } else {
-      trigger = {
-        type: "date",
-        date: date,
-      };
+      trigger = { type: "date", date: date };
     }
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body: description,
-        sound: "default", // ⚠️ Expo only supports one sound
-      },
-      trigger: {
-        seconds: 5,
-        repeats: false,
-      },
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: { title, body: description },
+      trigger,
     });
 
     const newReminder = {
@@ -181,10 +169,14 @@ export default function NewReminder() {
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
         {/* Hamburger */}
-        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }} pointerEvents="box-none">
+        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }}>
           <TouchableOpacity
             onPress={() => navigation.openDrawer()}
-            style={{ padding: 10 }}
+            style={{
+              padding: 10,
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: 12,
+            }}
           >
             <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
           </TouchableOpacity>
@@ -240,74 +232,34 @@ export default function NewReminder() {
               />
             )}
 
-            {/* 🔊 MULTI SOUND BUTTON */}
-            <Text style={styles.label}>Sounds</Text>
-
-            <TouchableOpacity
-              style={styles.pillButton}
-              onPress={() => setSoundPickerVisible(true)}
-            >
-              <Text>🔔</Text>
-              <Text>
-                {selectedSounds.length > 0
-                  ? selectedSounds.join(", ")
-                  : "Add Sound"}
-              </Text>
+            <TouchableOpacity style={styles.addBtn} onPress={handleAddReminder}>
+              <Text style={{ color: "white", fontWeight: "bold" }}>Add</Text>
             </TouchableOpacity>
 
-            {/* SOUND MODAL */}
-            <Modal
-              transparent
-              visible={soundPickerVisible}
-              animationType="fade"
-            >
-              <TouchableOpacity
-                style={styles.modalOverlay}
-                onPressOut={() => setSoundPickerVisible(false)}
-              >
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={soundOptions}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={[
-                          styles.option,
-                          selectedSounds.includes(item) &&
-                            styles.activeOption,
-                        ]}
-                        onPress={() => toggleSound(item)}
-                      >
-                        <Text
-                          style={{
-                            color: selectedSounds.includes(item)
-                              ? "white"
-                              : "black",
-                          }}
-                        >
-                          {item}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-                </View>
-              </TouchableOpacity>
-            </Modal>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => router.back()}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={handleAddReminder}
-              >
-                <Text style={{ color: "white" }}>Add</Text>
-              </TouchableOpacity>
+        {/* Repeat Modal */}
+        {repeatPickerVisible && (
+          <Modal transparent animationType="fade" visible={repeatPickerVisible}>
+            <View style={modalStyles.modalOverlay}>
+              <LinearGradient colors={["#2a8c82", "#d1913c"]} style={modalStyles.modalContent}>
+                {repeatOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={modalStyles.optionBtn}
+                    onPress={() => {
+                      setRepeat(option);
+                      setRepeatPickerVisible(false);
+                    }}
+                  >
+                    <Text style={modalStyles.optionText}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={[modalStyles.optionBtn, { backgroundColor: "rgba(255,255,255,0.3)" }]}
+                  onPress={() => setRepeatPickerVisible(false)}
+                >
+                  <Text style={[modalStyles.optionText, { color: "white" }]}>Cancel</Text>
+                </TouchableOpacity>
+              </LinearGradient>
             </View>
           </View>
         </ScrollView>
@@ -318,7 +270,7 @@ export default function NewReminder() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, alignItems: "center", paddingTop: 100 },
-  header: { fontSize: 28, color: "white", marginBottom: 20 },
+  header: { fontSize: 28, color: "white", marginBottom: 20, fontWeight: "bold" },
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
@@ -378,7 +330,6 @@ const modalStyles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
@@ -388,7 +339,9 @@ const modalStyles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 5,
   },
-  activeOption: {
-    backgroundColor: "#2f9e6f",
+  optionText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 }); 
