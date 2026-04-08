@@ -18,8 +18,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { addReminder } from "@/src/storage/reminders";
-
 
 // ✅ Notification handler
 Notifications.setNotificationHandler({
@@ -52,7 +50,8 @@ export default function NewReminder() {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
         name: "default",
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: Notifications.AndroidImportance.MAX,
+        sound: "default",
       });
     }
   }, []);
@@ -181,6 +180,7 @@ export default function NewReminder() {
       description,
       date: date.toISOString(),
       repeat,
+      sounds: selectedSounds, // ✅ MULTIPLE SAVED
       notificationId,
     };
 
@@ -193,6 +193,14 @@ export default function NewReminder() {
 
     alert("Reminder saved!");
     router.back();
+  };
+
+  // 🔊 TEST SOUND
+  const testSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/sounds/bell.mp3")
+    );
+    await sound.playAsync();
   };
 
   return (
