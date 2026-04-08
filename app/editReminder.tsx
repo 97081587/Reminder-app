@@ -77,7 +77,7 @@ export default function EditReminder() {
     }
 
     await editReminder(Number(id), {
-      title: title,
+      title,
       description,
       date: date.toISOString(),
     });

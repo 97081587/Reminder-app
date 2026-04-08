@@ -101,7 +101,7 @@ export default function NewReminder() {
       return;
     }
       await addReminder({
-      text: title,
+      title,
       description,
       date: date.toISOString(),
     });
