@@ -64,6 +64,21 @@ export default function EditReminder() {
     }
   };
 
+  // Load existing reminder data on mount
+  useEffect(() => {
+    const loadReminder = async () => {
+      const reminders = await getReminders();
+      const reminder = reminders.find((r: any) => r.id === Number(id));
+      if (reminder) {
+        setTitle(reminder.title || "");
+        setDescription(reminder.description || "");
+        setDate(reminder.date ? new Date(reminder.date) : new Date());
+      }
+    };
+
+    loadReminder();
+  }, []);
+
   // Save edited reminder
   const saveEditedReminder = async () => {
     // if (!title) {
@@ -75,7 +90,6 @@ export default function EditReminder() {
       title,
       description,
       date: date.toISOString(),
-      // repeat,
     });
 
     router.back();
@@ -85,21 +99,6 @@ export default function EditReminder() {
       return;
     }
   };
-
-  // Load existing reminder data on mount
-  useEffect(() => {
-    const loadReminder = async () => {
-      const reminders = await getReminders();
-      const reminder = reminders.find((r: any) => r.id === Number(id));
-      if (reminder) {
-        setTitle(reminder.title || "");
-        setDescription(reminder.description || "");
-        setDate(reminder.date ? new Date(reminder.date) : new Date());0
-      }
-    };
-
-    loadReminder();
-  }, []);
 
   //"HTML"
   return (
