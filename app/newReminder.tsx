@@ -7,6 +7,7 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
   Modal,
   Platform,
   ScrollView,
@@ -18,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -28,21 +30,14 @@ Notifications.setNotificationHandler({
 
 export default function NewReminder() {
   const router = useRouter();
-  const navigation = useNavigation();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [repeat, setRepeat] = useState("none");
+  const [showPicker, setShowPicker] = useState(false);
+  const [mode, setMode] = useState<"date" | "time">("date");
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
-
-  // 🔊 MULTIPLE SOUNDS
-  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
-  const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
 
   const repeatOptions: ("none" | "daily" | "weekly")[] = [
     "none",
@@ -50,6 +45,7 @@ export default function NewReminder() {
     "weekly",
   ];
 
+  // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
@@ -60,48 +56,62 @@ export default function NewReminder() {
     }
   }, []);
 
-  const toggleSound = (sound: string) => {
-    if (selectedSounds.includes(sound)) {
-      setSelectedSounds(selectedSounds.filter((s) => s !== sound));
-    } else {
-      setSelectedSounds([...selectedSounds, sound]);
-    }
+  const showMode = (currentMode: "date" | "time") => {
+    setMode(currentMode);
+    setShowPicker(true);
   };
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) {
-      const newDate = new Date(date);
-      newDate.setFullYear(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      setDate(newDate);
-    }
+    if (event.type === "set" && selectedDate) {
+      const currentDate = new Date(date);
 
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-      setShowTimePicker(true);
+      if (mode === "date") {
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        );
+        setDate(currentDate);
+
+        if (Platform.OS === "android") {
+          showMode("time");
+          return;
+        }
+      } else {
+        currentDate.setHours(
+          selectedDate.getHours(),
+          selectedDate.getMinutes()
+        );
+        setDate(currentDate);
+      }
     }
+    setShowPicker(false);
   };
 
-  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    if (selectedTime) {
-      const newDate = new Date(date);
-      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
-      setDate(newDate);
-    }
-    setShowTimePicker(false);
-  };
-
-  // ✅ ADD REMINDER
+  // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title) {
-      alert("Enter title");
+      alert("Please enter a title");
       return;
     }
 
-    const { status } = await Notifications.requestPermissionsAsync();
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+      await addReminder({
+      title,
+      description,
+      date: date.toISOString(),
+    });
+
+    router.back(); // go back to Home
+  
+
+    // Permissions
+    const { status } = await Notifications.getPermissionsAsync();
+    let finalStatus = status;
+
     if (status !== "granted") {
       const { status: newStatus } =
         await Notifications.requestPermissionsAsync();
@@ -113,31 +123,57 @@ export default function NewReminder() {
       return;
     }
 
-    let trigger: any;
+    // ✅ CROSS-PLATFORM TRIGGER FIX
+    let trigger: Notifications.NotificationTriggerInput;
+
     if (repeat === "daily") {
-      trigger = {
-        type: "calendar",
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
     } else if (repeat === "weekly") {
-      trigger = {
-        type: "calendar",
-        weekday: date.getDay() + 1,
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24 * 7,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          weekday: date.getDay() + 1,
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
     } else {
-      trigger = { type: "date", date: date };
+      trigger = {
+        type: "date",
+        date: new Date(date),
+      };
     }
 
+    // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
-      content: { title, body: description },
+      content: {
+        title,
+        body: description || "Reminder",
+      },
       trigger,
     });
 
+    // Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title,
@@ -150,10 +186,12 @@ export default function NewReminder() {
 
     const stored = await AsyncStorage.getItem("reminders");
     const reminders = stored ? JSON.parse(stored) : [];
+
     reminders.push(newReminder);
+
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved 🎉");
+    alert("Reminder saved!");
     router.back();
   };
 
@@ -168,26 +206,17 @@ export default function NewReminder() {
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
-        {/* Hamburger */}
-        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }}>
-          <TouchableOpacity
-            onPress={() => navigation.openDrawer()}
-            style={{
-              padding: 10,
-              backgroundColor: "rgba(255,255,255,0.2)",
-              borderRadius: 12,
-            }}
-          >
-            <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
-            <Text>Title</Text>
-            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter title"
+            />
 
             <Text style={styles.label}>Description</Text>
             <TextInput
@@ -198,17 +227,13 @@ export default function NewReminder() {
               placeholder="Enter description"
             />
 
-            <Text>Date</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-              <Text>{date.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Time</Text>
+            <Text style={styles.label}>Date & Time</Text>
             <TouchableOpacity
               style={styles.input}
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => showMode("date")}
             >
               <Text>
+                {date.toLocaleDateString()}{" "}
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -216,50 +241,77 @@ export default function NewReminder() {
               </Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
+            {showPicker && (
               <DateTimePicker
                 value={date}
-                mode="date"
+                mode={mode}
+                display="default"
                 onChange={onChangeDate}
               />
             )}
 
-            {showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                onChange={onChangeTime}
-              />
-            )}
-
-            <TouchableOpacity style={styles.addBtn} onPress={handleAddReminder}>
-              <Text style={{ color: "white", fontWeight: "bold" }}>Add</Text>
+            <Text style={styles.label}>Repeat</Text>
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: "center" }]}
+              onPress={() => setRepeatPickerVisible(true)}
+            >
+              <Text>{repeat}</Text>
             </TouchableOpacity>
 
-        {/* Repeat Modal */}
-        {repeatPickerVisible && (
-          <Modal transparent animationType="fade" visible={repeatPickerVisible}>
-            <View style={modalStyles.modalOverlay}>
-              <LinearGradient colors={["#2a8c82", "#d1913c"]} style={modalStyles.modalContent}>
-                {repeatOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={modalStyles.optionBtn}
-                    onPress={() => {
-                      setRepeat(option);
-                      setRepeatPickerVisible(false);
-                    }}
-                  >
-                    <Text style={modalStyles.optionText}>{option}</Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity
-                  style={[modalStyles.optionBtn, { backgroundColor: "rgba(255,255,255,0.3)" }]}
-                  onPress={() => setRepeatPickerVisible(false)}
-                >
-                  <Text style={[modalStyles.optionText, { color: "white" }]}>Cancel</Text>
-                </TouchableOpacity>
-              </LinearGradient>
+            <Modal
+              transparent
+              visible={repeatPickerVisible}
+              animationType="fade"
+              onRequestClose={() => setRepeatPickerVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setRepeatPickerVisible(false)}
+              >
+                <View style={styles.modalContent}>
+                  <FlatList
+                    data={repeatOptions}
+                    keyExtractor={(item) => item}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.option,
+                          item === repeat && styles.activeOption,
+                        ]}
+                        onPress={() => {
+                          setRepeat(item);
+                          setRepeatPickerVisible(false);
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: item === repeat ? "white" : "black",
+                          }}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => router.back()}
+              >
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={handleAddReminder}
+              >
+                <Text style={{ color: "white" }}>Add</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -269,35 +321,27 @@ export default function NewReminder() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", paddingTop: 100 },
-  header: { fontSize: 28, color: "white", marginBottom: 20, fontWeight: "bold" },
+  container: { flexGrow: 1, alignItems: "center", paddingTop: 60 },
+  header: { fontSize: 30, color: "white", marginBottom: 20 },
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 20,
+    borderRadius: 30,
     padding: 20,
   },
+  label: { marginTop: 10 },
   input: {
+    height: 45,
     backgroundColor: "white",
     borderRadius: 20,
     paddingHorizontal: 10,
     justifyContent: "center",
   },
   textArea: {
+    height: 70,
     backgroundColor: "white",
-    borderRadius: 10,
+    borderRadius: 20,
     padding: 10,
-  },
-  pillButton: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 999,
-    paddingHorizontal: 15,
-    height: 40,
-    marginTop: 5,
-    alignSelf: "flex-start",
   },
   buttonRow: {
     flexDirection: "row",
@@ -313,35 +357,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addBtn: {
+    width: "45%",
+    height: 45,
     backgroundColor: "#2f9e6f",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
+    borderRadius: 20,
+    justifyContent: "center",
     alignItems: "center",
   },
-});
-
-const modalStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center",  
   },
   modalContent: {
-    width: "80%",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
+    width: 200,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 10,
   },
   option: {
     padding: 10,
     borderRadius: 5,
     marginVertical: 5,
   },
-  optionText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+  activeOption: {
+    backgroundColor: "#2f9e6f",
   },
 });
