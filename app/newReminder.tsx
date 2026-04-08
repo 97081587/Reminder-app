@@ -1,25 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  FlatList,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -30,6 +27,7 @@ Notifications.setNotificationHandler({
 
 export default function NewReminder() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -38,16 +36,11 @@ export default function NewReminder() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [repeat, setRepeat] = useState("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
-  const repeatOptions: ("none" | "daily" | "weekly")[] = [
-    "none",
-    "daily",
-    "weekly",
-  ];
+  const repeatOptions = ["none", "daily", "weekly"];
 
-  // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
@@ -57,8 +50,7 @@ export default function NewReminder() {
     }
   }, []);
 
-  // ✅ DATE CHANGE
-  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const onChangeDate = (event: any, selectedDate?: Date) => {
     if (selectedDate) {
       const newDate = new Date(date);
       newDate.setFullYear(
@@ -68,63 +60,64 @@ export default function NewReminder() {
       );
       setDate(newDate);
     }
-
     if (Platform.OS === "android") {
       setShowDatePicker(false);
-      setShowTimePicker(true); // open time picker after date
+      setShowTimePicker(true);
     }
   };
 
-  // ✅ TIME CHANGE
-  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
+  const onChangeTime = (event: any, selectedTime?: Date) => {
     if (selectedTime) {
       const newDate = new Date(date);
-      newDate.setHours(
-        selectedTime.getHours(),
-        selectedTime.getMinutes()
-      );
+      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
       setDate(newDate);
     }
-
     setShowTimePicker(false);
   };
 
-  // ✅ ADD REMINDER
   const handleAddReminder = async () => {
     if (!title) {
-      alert("Please enter a title");
+      alert("Enter title");
       return;
     }
 
-    // Permissions
-    const { status } = await Notifications.getPermissionsAsync();
-    let finalStatus = status;
-
+    const { status } = await Notifications.requestPermissionsAsync();
     if (status !== "granted") {
-      const { status: newStatus } =
-        await Notifications.requestPermissionsAsync();
-      finalStatus = newStatus;
-    }
-
-    if (finalStatus !== "granted") {
-      alert("Permission not granted");
+      alert("Permission denied");
       return;
     }
 
-    // ✅ FIXED TRIGGER (EXPO NEW API)
+    let trigger: any;
+    if (repeat === "daily") {
+      trigger = {
+        type: "calendar",
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        type: "calendar",
+        weekday: date.getDay() + 1,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = {
+        type: "date",
+        date: date,
+      };
+    }
+
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: title || "Test Reminder",
-        body: description || "This should appear in 5 seconds",
+        title,
+        body: description,
       },
-      trigger: {
-        type: "timeInterval",
-        seconds: 5,
-        repeats: false,
-      },
+      trigger,
     });
 
-    // Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title,
@@ -136,212 +129,128 @@ export default function NewReminder() {
 
     const stored = await AsyncStorage.getItem("reminders");
     const reminders = stored ? JSON.parse(stored) : [];
-
     reminders.push(newReminder);
-
     await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
 
-    alert("Reminder saved! Fires in 5 seconds 🚀");
+    alert("Reminder saved 🎉");
     router.back();
   };
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.container}>
+        {/* Hamburger */}
+        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }} pointerEvents="box-none">
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer()}
+            style={{ padding: 10 }}
+          >
+            <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Title</Text>
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Enter title"
-            />
+            <Text>Title</Text>
+            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={styles.textArea}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              placeholder="Enter description"
-            />
+            <Text>Description</Text>
+            <TextInput style={styles.textArea} value={description} onChangeText={setDescription} />
 
-            <Text style={styles.label}>Date</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
+            <Text>Date</Text>
+            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
               <Text>{date.toLocaleDateString()}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>Time</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text>
-                {date.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
+            <Text>Time</Text>
+            <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
+              <Text>{date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
             </TouchableOpacity>
 
-            {/* ✅ iOS Pickers (INLINE) */}
-            {Platform.OS === "ios" && showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="inline"
-                onChange={onChangeDate}
-              />
-            )}
+            {showDatePicker && <DateTimePicker value={date} mode="date" onChange={onChangeDate} />}
+            {showTimePicker && <DateTimePicker value={date} mode="time" onChange={onChangeTime} />}
 
-            {Platform.OS === "ios" && showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                display="spinner"
-                onChange={onChangeTime}
-              />
-            )}
-
-            {/* ✅ Android Pickers */}
-            {Platform.OS === "android" && showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={onChangeDate}
-              />
-            )}
-
-            {Platform.OS === "android" && showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                display="default"
-                onChange={onChangeTime}
-              />
-            )}
-
-            <Text style={styles.label}>Repeat</Text>
-            <TouchableOpacity
-              style={[styles.input, { justifyContent: "center" }]}
-              onPress={() => setRepeatPickerVisible(true)}
-            >
+            <Text>Repeat</Text>
+            <TouchableOpacity style={styles.input} onPress={() => setRepeatPickerVisible(true)}>
               <Text>{repeat}</Text>
             </TouchableOpacity>
 
-            <Modal
-              transparent
-              visible={repeatPickerVisible}
-              animationType="fade"
-              onRequestClose={() => setRepeatPickerVisible(false)}
-            >
-              <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-                onPressOut={() => setRepeatPickerVisible(false)}
-              >
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={repeatOptions}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={[
-                          styles.option,
-                          item === repeat && styles.activeOption,
-                        ]}
-                        onPress={() => {
-                          setRepeat(item);
-                          setRepeatPickerVisible(false);
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: item === repeat ? "white" : "black",
-                          }}
-                        >
-                          {item}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-                </View>
-              </TouchableOpacity>
-            </Modal>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => router.back()}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={handleAddReminder}
-              >
-                <Text style={{ color: "white" }}>Add</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.addBtn} onPress={handleAddReminder}>
+              <Text style={{ color: "white" }}>Add</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
+
+        {/* Repeat Picker Modal */}
+        {repeatPickerVisible && (
+          <Modal
+            transparent
+            animationType="fade"
+            visible={repeatPickerVisible}
+            onRequestClose={() => setRepeatPickerVisible(false)}
+          >
+            <View style={modalStyles.modalOverlay}>
+              <View style={modalStyles.modalContent}>
+                {repeatOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={modalStyles.optionBtn}
+                    onPress={() => {
+                      setRepeat(option);
+                      setRepeatPickerVisible(false);
+                    }}
+                  >
+                    <Text style={modalStyles.optionText}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={[modalStyles.optionBtn, { backgroundColor: "#ccc" }]}
+                  onPress={() => setRepeatPickerVisible(false)}
+                >
+                  <Text style={modalStyles.optionText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        )}
       </LinearGradient>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", paddingTop: 60 },
-  header: { fontSize: 30, color: "white", marginBottom: 20 },
+  container: { flexGrow: 1, alignItems: "center", paddingTop: 100 },
+  header: { fontSize: 28, color: "white", marginBottom: 20 },
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 30,
+    borderRadius: 20,
     padding: 20,
   },
-  label: { marginTop: 10 },
   input: {
-    height: 45,
     backgroundColor: "white",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    justifyContent: "center",
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 5,
   },
   textArea: {
-    height: 70,
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 10,
     padding: 10,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  cancelBtn: {
-    width: "45%",
-    height: 45,
-    backgroundColor: "#ccc",
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    height: 60,
   },
   addBtn: {
-    width: "45%",
-    height: 45,
     backgroundColor: "#2f9e6f",
-    borderRadius: 20,
-    justifyContent: "center",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 15,
     alignItems: "center",
   },
+});
+
+const modalStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -349,17 +258,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    width: 200,
+    width: "80%",
     backgroundColor: "white",
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
   },
-  option: {
-    padding: 10,
-    borderRadius: 5,
+  optionBtn: {
+    width: "100%",
+    padding: 15,
     marginVertical: 5,
-  },
-  activeOption: {
     backgroundColor: "#2f9e6f",
+    borderRadius: 10,
+    alignItems: "center",
   },
-});
+  optionText: {
+    color: "white",
+    fontSize: 16,
+  },
+}); 
