@@ -6,18 +6,17 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { addReminder } from "@/src/storage/reminders";
-
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -58,7 +57,7 @@ export default function NewReminder() {
       newDate.setFullYear(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),
-        selectedDate.getDate()
+        selectedDate.getDate(),
       );
       setDate(newDate);
     }
@@ -142,7 +141,10 @@ export default function NewReminder() {
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
         {/* Hamburger */}
-        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }} pointerEvents="box-none">
+        <View
+          style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }}
+          pointerEvents="box-none"
+        >
           <TouchableOpacity
             onPress={() => navigation.openDrawer()}
             style={{ padding: 10 }}
@@ -151,31 +153,68 @@ export default function NewReminder() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
             <Text>Title</Text>
-            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+            />
 
             <Text>Description</Text>
-            <TextInput style={styles.textArea} value={description} onChangeText={setDescription} />
+            <TextInput
+              style={styles.textArea}
+              value={description}
+              onChangeText={setDescription}
+            />
 
             <Text>Date</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Text>{date.toLocaleDateString()}</Text>
             </TouchableOpacity>
 
             <Text>Time</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
-              <Text>{date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <Text>
+                {date.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
             </TouchableOpacity>
 
-            {showDatePicker && <DateTimePicker value={date} mode="date" onChange={onChangeDate} />}
-            {showTimePicker && <DateTimePicker value={date} mode="time" onChange={onChangeTime} />}
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                onChange={onChangeDate}
+              />
+            )}
+            {showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                onChange={onChangeTime}
+              />
+            )}
 
             <Text>Repeat</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setRepeatPickerVisible(true)}>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setRepeatPickerVisible(true)}
+            >
               <Text>{repeat}</Text>
             </TouchableOpacity>
 
@@ -278,4 +317,4 @@ const modalStyles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
-}); 
+});

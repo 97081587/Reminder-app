@@ -45,7 +45,7 @@ export default function Home() {
           padding: 25,
         }}
       >
-        <Text>{item.text}</Text>
+        <Text>{item.title}</Text>
         <TouchableOpacity onPress={() => onDelete(item.id)}>
           <Text>🗑️</Text>
         </TouchableOpacity>
