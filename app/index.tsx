@@ -8,24 +8,25 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getReminders, deleteReminder } from "../src/storage/reminders";
+import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home() {
   const [reminders, setReminders] = useState([]);
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await getReminders();
-      setReminders(data);
-    };
-    load();
-  }, []);
-
-  const handleDelete = async (id) => {
-    const updated = await deleteReminder(id);
-    setReminders(updated);
+  // Refresh reminders when screen is focused
+  const loadReminders = async () => {
+    const stored = await AsyncStorage.getItem("reminders");
+    setReminders(stored ? JSON.parse(stored) : []);
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadReminders();
+    }, []),
+  );
 
   //reminder cards
   const ReminderCard = ({ item, onDelete }) => {
@@ -64,13 +65,6 @@ export default function Home() {
             <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
-
-        {/* temporary button to edit reminder */}
-        <TouchableOpacity style={{ marginTop: 10 }}>
-          <Link href="/editReminder">
-            <Text style={{ color: "blue", marginTop: 5 }}>Edit</Text>
-          </Link>
-        </TouchableOpacity>
 
         {/* add button */}
         <TouchableOpacity style={styles.addWrap}>
