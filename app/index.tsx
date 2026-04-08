@@ -68,7 +68,7 @@ export default function Home() {
           data={reminders}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <ReminderCard item={item} onDelete={deleteReminder} />
+            <ReminderCard item={item} onDelete={handleDelete} />
           )}
         />
 
