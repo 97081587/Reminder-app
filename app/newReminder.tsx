@@ -34,10 +34,8 @@ export default function NewReminder() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
-
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
   const [repeat, setRepeat] = useState("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
@@ -106,17 +104,11 @@ export default function NewReminder() {
         repeats: true,
       };
     } else {
-      trigger = {
-        type: "date",
-        date: date,
-      };
+      trigger = { type: "date", date: date };
     }
 
     const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body: description,
-      },
+      content: { title, body: description },
       trigger,
     });
 
@@ -142,10 +134,14 @@ export default function NewReminder() {
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
         {/* Hamburger */}
-        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }} pointerEvents="box-none">
+        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }}>
           <TouchableOpacity
             onPress={() => navigation.openDrawer()}
-            style={{ padding: 10 }}
+            style={{
+              padding: 10,
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: 12,
+            }}
           >
             <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
           </TouchableOpacity>
@@ -180,21 +176,16 @@ export default function NewReminder() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.addBtn} onPress={handleAddReminder}>
-              <Text style={{ color: "white" }}>Add</Text>
+              <Text style={{ color: "white", fontWeight: "bold" }}>Add</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
 
-        {/* Repeat Picker Modal */}
+        {/* Repeat Modal */}
         {repeatPickerVisible && (
-          <Modal
-            transparent
-            animationType="fade"
-            visible={repeatPickerVisible}
-            onRequestClose={() => setRepeatPickerVisible(false)}
-          >
+          <Modal transparent animationType="fade" visible={repeatPickerVisible}>
             <View style={modalStyles.modalOverlay}>
-              <View style={modalStyles.modalContent}>
+              <LinearGradient colors={["#2a8c82", "#d1913c"]} style={modalStyles.modalContent}>
                 {repeatOptions.map((option) => (
                   <TouchableOpacity
                     key={option}
@@ -208,12 +199,12 @@ export default function NewReminder() {
                   </TouchableOpacity>
                 ))}
                 <TouchableOpacity
-                  style={[modalStyles.optionBtn, { backgroundColor: "#ccc" }]}
+                  style={[modalStyles.optionBtn, { backgroundColor: "rgba(255,255,255,0.3)" }]}
                   onPress={() => setRepeatPickerVisible(false)}
                 >
-                  <Text style={modalStyles.optionText}>Cancel</Text>
+                  <Text style={[modalStyles.optionText, { color: "white" }]}>Cancel</Text>
                 </TouchableOpacity>
-              </View>
+              </LinearGradient>
             </View>
           </Modal>
         )}
@@ -224,7 +215,7 @@ export default function NewReminder() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, alignItems: "center", paddingTop: 100 },
-  header: { fontSize: 28, color: "white", marginBottom: 20 },
+  header: { fontSize: 28, color: "white", marginBottom: 20, fontWeight: "bold" },
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
@@ -261,7 +252,6 @@ const modalStyles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     alignItems: "center",
@@ -277,5 +267,6 @@ const modalStyles = StyleSheet.create({
   optionText: {
     color: "white",
     fontSize: 16,
+    fontWeight: "bold",
   },
 }); 
