@@ -1,7 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -18,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Audio } from "expo-av";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -37,39 +36,45 @@ export default function NewReminder() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
-  const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
-
-  // 🔊 MULTIPLE SOUNDS
-  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
+  const [selectedSound, setSelectedSound] = useState(null);
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
-
-  const repeatOptions: ("none" | "daily" | "weekly")[] = [
-    "none",
-    "daily",
-    "weekly",
+  // ✅ YOUR SOUNDS
+  const soundOptions = [
+    { label: "Default", value: "default", file: null },
+    { label: "Bell", value: "bell", file: require("../assets/sounds/bell.mp3") },
+    { label: "Chime", value: "chime", file: require("../assets/sounds/chime.mp3") },
+    { label: "Mijn", value: "mijn", file: require("../assets/sounds/mijn.mp3") },
   ];
 
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
         name: "default",
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: Notifications.AndroidImportance.MAX,
+        sound: "default",
       });
     }
   }, []);
 
-  const toggleSound = (sound: string) => {
-    if (selectedSounds.includes(sound)) {
-      setSelectedSounds(selectedSounds.filter((s) => s !== sound));
-    } else {
-      setSelectedSounds([...selectedSounds, sound]);
+  // 🔊 PLAY SOUND PREVIEW
+  const playSound = async (file) => {
+    if (!file) return;
+    const { sound } = await Audio.Sound.createAsync(file);
+    await sound.playAsync();
+  };
+
+  // ✅ SELECT SOUND
+  const selectSound = (item) => {
+    setSelectedSound(item);
+
+    if (item.file) {
+      playSound(item.file);
     }
   };
 
-  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  // 📅 DATE PICKER
+  const onChangeDate = (event, selectedDate) => {
     if (selectedDate) {
       const newDate = new Date(date);
       newDate.setFullYear(
@@ -79,55 +84,41 @@ export default function NewReminder() {
       );
       setDate(newDate);
     }
-
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-      setShowTimePicker(true);
-    }
+    setShowDatePicker(false);
+    setShowTimePicker(true);
   };
 
-  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
+  // ⏰ TIME PICKER
+  const onChangeTime = (event, selectedTime) => {
     if (selectedTime) {
       const newDate = new Date(date);
-      newDate.setHours(
-        selectedTime.getHours(),
-        selectedTime.getMinutes()
-      );
+      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
       setDate(newDate);
     }
-
     setShowTimePicker(false);
   };
 
+  // ✅ ADD REMINDER
   const handleAddReminder = async () => {
     if (!title) {
       alert("Please enter a title");
       return;
     }
 
-    const { status } = await Notifications.getPermissionsAsync();
-    let finalStatus = status;
-
+    const { status } = await Notifications.requestPermissionsAsync();
     if (status !== "granted") {
-      const { status: newStatus } =
-        await Notifications.requestPermissionsAsync();
-      finalStatus = newStatus;
-    }
-
-    if (finalStatus !== "granted") {
       alert("Permission not granted");
       return;
     }
 
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body: description,
-        sound: "default", // ⚠️ Expo only supports one sound
+        sound: "default", // Expo limitation
       },
       trigger: {
         seconds: 5,
-        repeats: false,
       },
     });
 
@@ -136,9 +127,7 @@ export default function NewReminder() {
       title,
       description,
       date: date.toISOString(),
-      repeat,
-      sounds: selectedSounds, // ✅ MULTIPLE SAVED
-      notificationId,
+      sound: selectedSound?.value || "default",
     };
 
     const stored = await AsyncStorage.getItem("reminders");
@@ -152,6 +141,14 @@ export default function NewReminder() {
     router.back();
   };
 
+  // 🔊 TEST SOUND
+  const testSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/sounds/bell.mp3")
+    );
+    await sound.playAsync();
+  };
+
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
@@ -159,62 +156,39 @@ export default function NewReminder() {
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Title</Text>
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Enter title"
-            />
+            <Text>Title</Text>
+            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
-            <Text style={styles.label}>Description</Text>
+            <Text>Description</Text>
             <TextInput
               style={styles.textArea}
               value={description}
               onChangeText={setDescription}
               multiline
-              placeholder="Enter description"
             />
 
-            <Text style={styles.label}>Date</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
+            <Text>Date</Text>
+            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
               <Text>{date.toLocaleDateString()}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>Time</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowTimePicker(true)}
-            >
+            <Text>Time</Text>
+            <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
               <Text>
-                {date.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </Text>
             </TouchableOpacity>
 
             {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                onChange={onChangeDate}
-              />
+              <DateTimePicker value={date} mode="date" onChange={onChangeDate} />
             )}
 
             {showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                onChange={onChangeTime}
-              />
+              <DateTimePicker value={date} mode="time" onChange={onChangeTime} />
             )}
 
-            {/* 🔊 MULTI SOUND BUTTON */}
-            <Text style={styles.label}>Sounds</Text>
+            {/* SOUND PICKER */}
+            <Text>Sound</Text>
 
             <TouchableOpacity
               style={styles.pillButton}
@@ -222,44 +196,34 @@ export default function NewReminder() {
             >
               <Text>🔔</Text>
               <Text>
-                {selectedSounds.length > 0
-                  ? selectedSounds.join(", ")
-                  : "Add Sound"}
+                {selectedSound ? selectedSound.label : "Default"}
               </Text>
             </TouchableOpacity>
 
-            {/* SOUND MODAL */}
-            <Modal
-              transparent
-              visible={soundPickerVisible}
-              animationType="fade"
-            >
+            {/* TEST SOUND */}
+            <TouchableOpacity onPress={testSound} style={{ marginTop: 10 }}>
+              <Text>▶️ Test Sound</Text>
+            </TouchableOpacity>
+
+            {/* MODAL */}
+            <Modal transparent visible={soundPickerVisible}>
               <TouchableOpacity
                 style={styles.modalOverlay}
-                onPressOut={() => setSoundPickerVisible(false)}
+                onPress={() => setSoundPickerVisible(false)}
               >
                 <View style={styles.modalContent}>
                   <FlatList
                     data={soundOptions}
-                    keyExtractor={(item) => item}
+                    keyExtractor={(item) => item.value}
                     renderItem={({ item }) => (
                       <TouchableOpacity
-                        style={[
-                          styles.option,
-                          selectedSounds.includes(item) &&
-                            styles.activeOption,
-                        ]}
-                        onPress={() => toggleSound(item)}
+                        style={styles.option}
+                        onPress={() => {
+                          selectSound(item);
+                          setSoundPickerVisible(false);
+                        }}
                       >
-                        <Text
-                          style={{
-                            color: selectedSounds.includes(item)
-                              ? "white"
-                              : "black",
-                          }}
-                        >
-                          {item}
-                        </Text>
+                        <Text>{item.label}</Text>
                       </TouchableOpacity>
                     )}
                   />
@@ -267,18 +231,13 @@ export default function NewReminder() {
               </TouchableOpacity>
             </Modal>
 
+            {/* BUTTONS */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => router.back()}
-              >
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
                 <Text>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={handleAddReminder}
-              >
+              <TouchableOpacity style={styles.addBtn} onPress={handleAddReminder}>
                 <Text style={{ color: "white" }}>Add</Text>
               </TouchableOpacity>
             </View>
@@ -298,19 +257,20 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 20,
   },
-  label: { marginTop: 10 },
   input: {
     height: 45,
     backgroundColor: "white",
     borderRadius: 20,
     paddingHorizontal: 10,
     justifyContent: "center",
+    marginBottom: 10,
   },
   textArea: {
     height: 70,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 10,
+    marginBottom: 10,
   },
   pillButton: {
     flexDirection: "row",
@@ -320,8 +280,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 15,
     height: 40,
-    marginTop: 5,
-    alignSelf: "flex-start",
   },
   buttonRow: {
     flexDirection: "row",
@@ -358,10 +316,5 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 10,
-    borderRadius: 5,
-    marginVertical: 5,
-  },
-  activeOption: {
-    backgroundColor: "#2f9e6f",
   },
 });
