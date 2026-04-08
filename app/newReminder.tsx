@@ -7,14 +7,14 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -344,4 +344,4 @@ const modalStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-}); 
+});
