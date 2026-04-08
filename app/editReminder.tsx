@@ -64,6 +64,27 @@ export default function EditReminder() {
     }
   };
 
+    // Save edited reminder
+  const saveEditedReminder = async () => {
+    // if (!title) {
+    //   alert("Please enter a title");
+    //   return;
+    //   }
+
+       if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+
+    await editReminder(Number(id), {
+      title: title,
+      description,
+      date: date.toISOString(),
+    });
+
+    router.back();
+  };
+
   // Load existing reminder data on mount
   useEffect(() => {
     const loadReminder = async () => {
@@ -78,27 +99,6 @@ export default function EditReminder() {
 
     loadReminder();
   }, []);
-
-  // Save edited reminder
-  const saveEditedReminder = async () => {
-    // if (!title) {
-    //   alert("Please enter a title");
-    //   return;
-    //   }
-
-    await editReminder(Number(id), {
-      title,
-      description,
-      date: date.toISOString(),
-    });
-
-    router.back();
-
-    if (date < new Date()) {
-      alert("Please select a future date and time");
-      return;
-    }
-  };
 
   //"HTML"
   return (
