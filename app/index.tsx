@@ -22,6 +22,12 @@ export default function Home() {
     setReminders(stored ? JSON.parse(stored) : []);
   };
 
+  // Delete reminder and refresh list
+  const handleDelete = async (id) => {
+    const updated = await deleteReminder(id);
+    setReminders(updated);
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadReminders();
