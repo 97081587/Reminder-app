@@ -66,10 +66,10 @@ export default function EditReminder() {
 
   // Save edited reminder
   const saveEditedReminder = async () => {
-    // if (!title) {
-    //   alert("Please enter a title");
-    //   return;
-    //   }
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
 
     await editReminder(Number(id), {
       title,
@@ -78,11 +78,6 @@ export default function EditReminder() {
     });
 
     router.back();
-
-    if (date < new Date()) {
-      alert("Please select a future date and time");
-      return;
-    }
   };
 
   // Load existing reminder data on mount
@@ -98,7 +93,7 @@ export default function EditReminder() {
     };
 
     loadReminder();
-  }, []);
+  }, [id]);
 
   //"HTML"
   return (
