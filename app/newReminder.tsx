@@ -9,6 +9,7 @@ import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
   Modal,
   Platform,
   ScrollView,
@@ -21,6 +22,7 @@ import {
 import Animated, { SlideInLeft, SlideOutLeft } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => {
     return {
@@ -44,12 +46,6 @@ export default function NewReminder() {
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
-
-  // 🔊 MULTIPLE SOUNDS
-  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
-  const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
 
   const repeatOptions: ("none" | "daily" | "weekly")[] = [
     "none",
@@ -103,10 +99,10 @@ export default function NewReminder() {
       newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
       setDate(newDate);
     }
-    setShowTimePicker(false);
+    setShowPicker(false);
   };
 
-  // ✅ ADD REMINDER
+  // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title.trim()) {
       alert("Enter title");
@@ -156,11 +152,13 @@ export default function NewReminder() {
       };
     }
 
+    // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: { title: title.trim(), body: description || "" },
       trigger,
     });
 
+    // Save reminder
     const newReminder = {
       id: Date.now().toString(),
       title: title.trim(),
@@ -180,7 +178,7 @@ export default function NewReminder() {
 
     await AsyncStorage.setItem("reminders", JSON.stringify(updated));
 
-    alert("Reminder saved 🎉");
+    alert("Reminder saved!");
     router.back();
   };
 
@@ -383,7 +381,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 6,
   },
+  label: { marginTop: 10 },
   input: {
+    height: 45,
     backgroundColor: "white",
     borderRadius: 20,
     paddingHorizontal: 10,
@@ -392,8 +392,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   textArea: {
+    height: 70,
     backgroundColor: "white",
-    borderRadius: 10,
+    borderRadius: 20,
     padding: 10,
     minHeight: 80,
   },
@@ -421,6 +422,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addBtn: {
+    width: "45%",
+    height: 45,
     backgroundColor: "#2f9e6f",
     padding: 15,
     borderRadius: 10,
@@ -468,21 +471,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
-});
-
-const modalStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center",  
   },
 
   modalContent: {
-    width: "80%",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
+    width: 200,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 10,
   },
 
   optionBtn: {
