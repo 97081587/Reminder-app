@@ -488,4 +488,4 @@ const modalStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-});
+}); 
