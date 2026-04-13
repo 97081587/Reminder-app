@@ -20,6 +20,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.33",
     "expo": "~54.0.33",
+    "expo-av": "~16.0.8",
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.20",
@@ -51,6 +52,7 @@
   "devDependencies": {
     "@react-native-community/cli": "latest",
     "@types/react": "~19.1.0",
+    "@types/react-native": "^0.72.8",
     "typescript": "~5.9.2"
   },
   "private": true
