@@ -1,4 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addReminder } from "@/src/storage/reminders";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -7,6 +8,8 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,12 +17,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  Linking,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Audio } from "expo-av";
-import { addReminder } from "@/src/storage/reminders";
 
 // ✅ Notification handler
 Notifications.setNotificationHandler({
@@ -38,41 +37,22 @@ export default function NewReminder() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
-  const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
-  const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-
-  const [location, setLocation] = useState<string | null>(null);
-
-  // 🔊 sound files
-  const sounds = {
-    bell: require("../assets/sounds/bell.mp3"),
-    chime: require("../assets/sounds/chime.mp3"),
-    mijn: require("../assets/sounds/mijn.mp3"),
-  };
-
-  // 🔊 play preview
-  const playSound = async (key: "bell" | "chime" | "mijn") => {
-    try {
-      const { sound } = await Audio.Sound.createAsync(sounds[key]);
-      await sound.playAsync();
-    } catch (e) {
-      console.log("Sound error:", e);
-    }
-  };
-
-  // 📍 open maps
-  const handleAddLocation = () => {
-    setLocation("Opened Maps");
-    Linking.openURL("https://www.google.com/maps");
-  };
+  const repeatOptions: ("none" | "daily" | "weekly")[] = [
+    "none",
+    "daily",
+    "weekly",
+  ];
 
   // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
         name: "default",
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: Notifications.AndroidImportance.MAX,
+        sound: "default",
       });
     }
   }, []);
@@ -112,42 +92,116 @@ export default function NewReminder() {
   // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title) {
-      alert("Enter a title");
+      alert("Please enter a title");
       return;
     }
 
+    if (date < new Date()) {
+      alert("Please select a future date and time");
+      return;
+    }
+      await addReminder({
+      title,
+      description,
+      date: date.toISOString(),
+    });
+
+    router.back(); // go back to Home
+  
+
+    // Permissions
     const { status } = await Notifications.getPermissionsAsync();
+    let finalStatus = status;
+
     if (status !== "granted") {
-      const res = await Notifications.requestPermissionsAsync();
-      if (res.status !== "granted") {
-        alert("Permission required");
-        return;
-      }
+      const { status: newStatus } =
+        await Notifications.requestPermissionsAsync();
+      finalStatus = newStatus;
     }
 
-    const trigger: Notifications.NotificationTriggerInput = {
-      type: "timeInterval",
-      seconds: 5,
-      repeats: false,
-    };
+    if (finalStatus !== "granted") {
+      alert("Permission not granted");
+      return;
+    }
+
+    // ✅ CROSS-PLATFORM TRIGGER FIX
+    let trigger: Notifications.NotificationTriggerInput;
+
+    if (repeat === "daily") {
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
+    } else if (repeat === "weekly") {
+      if (Platform.OS === "android") {
+        trigger = {
+          type: "timeInterval",
+          seconds: 60 * 60 * 24 * 7,
+          repeats: true,
+        };
+      } else {
+        trigger = {
+          type: "calendar",
+          weekday: date.getDay() + 1,
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        };
+      }
+    } else {
+      trigger = {
+        type: "date",
+        date: new Date(date),
+      };
+    }
 
     // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body: description || "Reminder",
-        sound: "default",
       },
       trigger,
     });
 
-    await addReminder({
-      text: title,
+    // Save reminder
+    const newReminder = {
+      id: Date.now().toString(),
+      title,
       description,
-      date: new Date().toISOString(),
-    });
+      date: date.toISOString(),
+      repeat,
+      sounds: selectedSounds, // ✅ MULTIPLE SAVED
+      notificationId,
+    };
 
-    router.replace("/");
+    const stored = await AsyncStorage.getItem("reminders");
+    const reminders = stored ? JSON.parse(stored) : [];
+
+    reminders.push(newReminder);
+
+    await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
+
+    alert("Reminder saved!");
+    router.back();
+  };
+
+  // 🔊 TEST SOUND
+  const testSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require("../../assets/sounds/bell.mp3")
+    );
+    await sound.playAsync();
   };
 
   return (
@@ -197,71 +251,58 @@ export default function NewReminder() {
               />
             )}
 
-            {/* ✅ PILLS UNDER DATE */}
-            <View style={styles.pillRow}>
-              {/* 🔊 SOUND */}
-              <TouchableOpacity
-                style={styles.pill}
-                onPress={() => setSoundPickerVisible(true)}
-              >
-                <Text>🔔 Add Sound</Text>
-              </TouchableOpacity>
+            <Text style={styles.label}>Repeat</Text>
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: "center" }]}
+              onPress={() => setRepeatPickerVisible(true)}
+            >
+              <Text>{repeat}</Text>
+            </TouchableOpacity>
 
-              {/* 📍 LOCATION */}
-              <TouchableOpacity
-                style={styles.pill}
-                onPress={handleAddLocation}
-              >
-                <Text>
-                  {location ? `📍 ${location}` : "📍 Add Location"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* 🔊 SOUND MODAL */}
             <Modal
               transparent
               visible={repeatPickerVisible}
               animationType="fade"
-              onRequestClose={() => setSoundPickerVisible(false)}
+              onRequestClose={() => setRepeatPickerVisible(false)}
             >
               <TouchableOpacity
                 style={styles.modalOverlay}
                 activeOpacity={1}
-                onPressOut={() => setSoundPickerVisible(false)}
+                onPressOut={() => setRepeatPickerVisible(false)}
               >
                 <View style={styles.modalContent}>
-                  {(["bell", "chime", "mijn"] as const).map((item) => (
-                    <TouchableOpacity
-                      key={item}
-                      style={[
-                        styles.option,
-                        item === sound && styles.activeOption,
-                      ]}
-                      onPress={() => {
-                        setSound(item);
-                        playSound(item);
-                        setSoundPickerVisible(false);
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: item === sound ? "white" : "black",
+                  <FlatList
+                    data={repeatOptions}
+                    keyExtractor={(item) => item}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.option,
+                          item === repeat && styles.activeOption,
+                        ]}
+                        onPress={() => {
+                          setRepeat(item);
+                          setRepeatPickerVisible(false);
                         }}
                       >
-                        {item}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          style={{
+                            color: item === repeat ? "white" : "black",
+                          }}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
                 </View>
               </TouchableOpacity>
             </Modal>
 
-            {/* BUTTONS */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}
-                onPress={() => router.replace("/")}
+                onPress={() => router.back()}
               >
                 <Text>Cancel</Text>
               </TouchableOpacity>
@@ -270,7 +311,7 @@ export default function NewReminder() {
                 style={styles.addBtn}
                 onPress={handleAddReminder}
               >
-                <Text style={{ color: "white" }}>Add Reminder</Text>
+                <Text style={{ color: "white" }}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -280,74 +321,47 @@ export default function NewReminder() {
   );
 }
 
-// 🎨 STYLES
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: "center",
-    paddingTop: 80,
-    paddingBottom: 40,
-  },
-  header: {
-    fontSize: 34,
-    color: "white",
-    marginBottom: 30,
-    fontWeight: "600",
-  },
+  container: { flexGrow: 1, alignItems: "center", paddingTop: 60 },
+  header: { fontSize: 30, color: "white", marginBottom: 20 },
   card: {
-    width: "88%",
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: "85%",
+    backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 30,
-    padding: 22,
-  },
-  label: {
-    marginTop: 12,
-    marginBottom: 5,
-    color: "#222",
+    padding: 20,
   },
   label: { marginTop: 10 },
   input: {
-    height: 50,
-    backgroundColor: "#f1f1f1",
-    borderRadius: 25,
-    paddingHorizontal: 15,
+    height: 45,
+    backgroundColor: "white",
+    borderRadius: 20,
+    paddingHorizontal: 10,
     justifyContent: "center",
   },
   textArea: {
-    height: 90,
-    backgroundColor: "#f1f1f1",
+    height: 70,
+    backgroundColor: "white",
     borderRadius: 20,
-    padding: 15,
-  },
-  pillRow: {
-    flexDirection: "row",
-    marginTop: 15,
-    gap: 10,
-  },
-  pill: {
-    backgroundColor: "#eee",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
+    padding: 10,
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 25,
+    marginTop: 20,
   },
   cancelBtn: {
     width: "45%",
-    height: 50,
+    height: 45,
     backgroundColor: "#ccc",
-    borderRadius: 25,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
   addBtn: {
     width: "45%",
-    height: 50,
+    height: 45,
     backgroundColor: "#2f9e6f",
-    borderRadius: 25,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -358,14 +372,14 @@ const styles = StyleSheet.create({
     alignItems: "center",  
   },
   modalContent: {
-    width: 220,
+    width: 200,
     backgroundColor: "white",
-    borderRadius: 15,
+    borderRadius: 10,
     padding: 10,
   },
   option: {
-    padding: 12,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 5,
     marginVertical: 5,
   },
   activeOption: {
