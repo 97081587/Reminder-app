@@ -7,17 +7,21 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Modal,
+  Linking,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Audio } from "expo-av";
+import { addReminder } from "@/src/storage/reminders";
 
+// ✅ Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -28,174 +32,137 @@ Notifications.setNotificationHandler({
 
 export default function NewReminder() {
   const router = useRouter();
-  const navigation = useNavigation();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [mode, setMode] = useState<"date" | "time">("date");
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
-  const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
-
-  // 🔊 MULTIPLE SOUNDS
-  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
+  const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
+  const [location, setLocation] = useState<string | null>(null);
 
-  const repeatOptions: ("none" | "daily" | "weekly")[] = [
-    "none",
-    "daily",
-    "weekly",
-  ];
+  // 🔊 sound files
+  const sounds = {
+    bell: require("../assets/sounds/bell.mp3"),
+    chime: require("../assets/sounds/chime.mp3"),
+    mijn: require("../assets/sounds/mijn.mp3"),
+  };
 
+  // 🔊 play preview
+  const playSound = async (key: "bell" | "chime" | "mijn") => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(sounds[key]);
+      await sound.playAsync();
+    } catch (e) {
+      console.log("Sound error:", e);
+    }
+  };
+
+  // 📍 open maps
+  const handleAddLocation = () => {
+    setLocation("Opened Maps");
+    Linking.openURL("https://www.google.com/maps");
+  };
+
+  // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
         name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        sound: "default",
+        importance: Notifications.AndroidImportance.HIGH,
       });
     }
   }, []);
 
-  const toggleSound = (sound: string) => {
-    if (selectedSounds.includes(sound)) {
-      setSelectedSounds(selectedSounds.filter((s) => s !== sound));
-    } else {
-      setSelectedSounds([...selectedSounds, sound]);
-    }
+  const showMode = (currentMode: "date" | "time") => {
+    setMode(currentMode);
+    setShowPicker(true);
   };
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) {
-      const newDate = new Date(date);
-      newDate.setFullYear(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      setDate(newDate);
-    }
+    if (event.type === "set" && selectedDate) {
+      const currentDate = new Date(date);
 
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-      setShowTimePicker(true);
-    }
-  };
+      if (mode === "date") {
+        currentDate.setFullYear(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        );
+        setDate(currentDate);
 
-  const onChangeTime = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    if (selectedTime) {
-      const newDate = new Date(date);
-      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
-      setDate(newDate);
+        if (Platform.OS === "android") {
+          showMode("time");
+          return;
+        }
+      } else {
+        currentDate.setHours(
+          selectedDate.getHours(),
+          selectedDate.getMinutes()
+        );
+        setDate(currentDate);
+      }
     }
-    setShowTimePicker(false);
+    setShowPicker(false);
   };
 
   // ✅ ADD REMINDER
   const handleAddReminder = async () => {
     if (!title) {
-      alert("Enter title");
+      alert("Enter a title");
       return;
     }
 
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await Notifications.getPermissionsAsync();
     if (status !== "granted") {
-      const { status: newStatus } =
-        await Notifications.requestPermissionsAsync();
-      finalStatus = newStatus;
+      const res = await Notifications.requestPermissionsAsync();
+      if (res.status !== "granted") {
+        alert("Permission required");
+        return;
+      }
     }
 
-    if (finalStatus !== "granted") {
-      alert("Permission not granted");
-      return;
-    }
-
-    let trigger: any;
-    if (repeat === "daily") {
-      trigger = {
-        type: "calendar",
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
-    } else if (repeat === "weekly") {
-      trigger = {
-        type: "calendar",
-        weekday: date.getDay() + 1,
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        repeats: true,
-      };
-    } else {
-      trigger = {
-        type: "date",
-        date: date,
-      };
-    }
+    const trigger: Notifications.NotificationTriggerInput = {
+      type: "timeInterval",
+      seconds: 5,
+      repeats: false,
+    };
 
     await Notifications.scheduleNotificationAsync({
       content: {
         title,
-        body: description,
-        sound: "default", // ⚠️ Expo only supports one sound
+        body: description || "Reminder",
+        sound: "default",
       },
-      trigger: {
-        seconds: 5,
-        repeats: false,
-      },
+      trigger,
     });
 
-    const newReminder = {
-      id: Date.now().toString(),
-      title,
+    await addReminder({
+      text: title,
       description,
-      date: date.toISOString(),
-      repeat,
-      sounds: selectedSounds, // ✅ MULTIPLE SAVED
-      notificationId,
-    };
+      date: new Date().toISOString(),
+    });
 
-    const stored = await AsyncStorage.getItem("reminders");
-    const reminders = stored ? JSON.parse(stored) : [];
-    reminders.push(newReminder);
-    await AsyncStorage.setItem("reminders", JSON.stringify(reminders));
-
-    alert("Reminder saved 🎉");
-    router.back();
-  };
-
-  // 🔊 TEST SOUND
-  const testSound = async () => {
-    const { sound } = await Audio.Sound.createAsync(
-      require("../../assets/sounds/bell.mp3")
-    );
-    await sound.playAsync();
+    router.replace("/");
   };
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
-        {/* Hamburger */}
-        <View style={{ position: "absolute", top: 60, left: 20, zIndex: 100 }} pointerEvents="box-none">
-          <TouchableOpacity
-            onPress={() => navigation.openDrawer()}
-            style={{ padding: 10 }}
-          >
-            <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
-            <Text>Title</Text>
-            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter title"
+            />
 
             <Text style={styles.label}>Description</Text>
             <TextInput
@@ -206,17 +173,13 @@ export default function NewReminder() {
               placeholder="Enter description"
             />
 
-            <Text>Date</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-              <Text>{date.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Time</Text>
+            <Text style={styles.label}>Date & Time</Text>
             <TouchableOpacity
               style={styles.input}
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => showMode("date")}
             >
               <Text>
+                {date.toLocaleDateString()}{" "}
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -224,80 +187,80 @@ export default function NewReminder() {
               </Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
+            {showPicker && (
               <DateTimePicker
                 value={date}
-                mode="date"
+                mode={mode}
+                display="default"
                 onChange={onChangeDate}
               />
             )}
 
-            {showTimePicker && (
-              <DateTimePicker
-                value={date}
-                mode="time"
-                onChange={onChangeTime}
-              />
-            )}
+            {/* ✅ PILLS UNDER DATE */}
+            <View style={styles.pillRow}>
+              {/* 🔊 SOUND */}
+              <TouchableOpacity
+                style={styles.pill}
+                onPress={() => setSoundPickerVisible(true)}
+              >
+                <Text>🔔 Add Sound</Text>
+              </TouchableOpacity>
 
-            {/* 🔊 MULTI SOUND BUTTON */}
-            <Text style={styles.label}>Sounds</Text>
+              {/* 📍 LOCATION */}
+              <TouchableOpacity
+                style={styles.pill}
+                onPress={handleAddLocation}
+              >
+                <Text>
+                  {location ? `📍 ${location}` : "📍 Add Location"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={styles.pillButton}
-              onPress={() => setSoundPickerVisible(true)}
-            >
-              <Text>🔔</Text>
-              <Text>
-                {selectedSounds.length > 0
-                  ? selectedSounds.join(", ")
-                  : "Add Sound"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* SOUND MODAL */}
+            {/* 🔊 SOUND MODAL */}
             <Modal
               transparent
               visible={soundPickerVisible}
               animationType="fade"
+              onRequestClose={() => setSoundPickerVisible(false)}
             >
               <TouchableOpacity
                 style={styles.modalOverlay}
+                activeOpacity={1}
                 onPressOut={() => setSoundPickerVisible(false)}
               >
                 <View style={styles.modalContent}>
-                  <FlatList
-                    data={soundOptions}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={[
-                          styles.option,
-                          selectedSounds.includes(item) &&
-                            styles.activeOption,
-                        ]}
-                        onPress={() => toggleSound(item)}
+                  {(["bell", "chime", "mijn"] as const).map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.option,
+                        item === sound && styles.activeOption,
+                      ]}
+                      onPress={() => {
+                        setSound(item);
+                        playSound(item);
+                        setSoundPickerVisible(false);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: item === sound ? "white" : "black",
+                        }}
                       >
-                        <Text
-                          style={{
-                            color: selectedSounds.includes(item)
-                              ? "white"
-                              : "black",
-                          }}
-                        >
-                          {item}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  />
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </TouchableOpacity>
             </Modal>
 
+            {/* BUTTONS */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}
-                onPress={() => router.back()}
+                onPress={() => router.replace("/")}
               >
                 <Text>Cancel</Text>
               </TouchableOpacity>
@@ -306,7 +269,7 @@ export default function NewReminder() {
                 style={styles.addBtn}
                 onPress={handleAddReminder}
               >
-                <Text style={{ color: "white" }}>Add</Text>
+                <Text style={{ color: "white" }}>Add Reminder</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -316,60 +279,76 @@ export default function NewReminder() {
   );
 }
 
+// 🎨 STYLES
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", paddingTop: 100 },
-  header: { fontSize: 28, color: "white", marginBottom: 20 },
+  container: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 80,
+    paddingBottom: 40,
+  },
+  header: {
+    fontSize: 34,
+    color: "white",
+    marginBottom: 30,
+    fontWeight: "600",
+  },
   card: {
-    width: "85%",
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 20,
-    padding: 20,
+    width: "88%",
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 30,
+    padding: 22,
+  },
+  label: {
+    marginTop: 12,
+    marginBottom: 5,
+    color: "#222",
   },
   input: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    paddingHorizontal: 10,
+    height: 50,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 25,
+    paddingHorizontal: 15,
     justifyContent: "center",
   },
   textArea: {
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 10,
+    height: 90,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 20,
+    padding: 15,
   },
-  pillButton: {
+  pillRow: {
     flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 999,
+    marginTop: 15,
+    gap: 10,
+  },
+  pill: {
+    backgroundColor: "#eee",
+    paddingVertical: 10,
     paddingHorizontal: 15,
-    height: 40,
-    marginTop: 5,
-    alignSelf: "flex-start",
+    borderRadius: 20,
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 25,
   },
   cancelBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#ccc",
-    borderRadius: 20,
+    borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
   },
   addBtn: {
+    width: "45%",
+    height: 50,
     backgroundColor: "#2f9e6f",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
+    borderRadius: 25,
+    justifyContent: "center",
     alignItems: "center",
   },
-});
-
-const modalStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -377,18 +356,17 @@ const modalStyles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    width: "80%",
+    width: 220,
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
+    borderRadius: 15,
+    padding: 10,
   },
   option: {
-    padding: 10,
-    borderRadius: 5,
+    padding: 12,
+    borderRadius: 10,
     marginVertical: 5,
   },
   activeOption: {
     backgroundColor: "#2f9e6f",
   },
-}); 
+});
