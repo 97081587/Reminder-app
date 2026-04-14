@@ -29,7 +29,7 @@ export const addReminder = async (reminder) => {
 
   const newReminder = {
     id: Date.now(),
-    text: reminder.text,
+    title: reminder.title,
     description: reminder.description || "",
     date: reminder.date,
   };
