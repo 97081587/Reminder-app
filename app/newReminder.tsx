@@ -109,7 +109,7 @@ export default function NewReminder() {
     setShowPicker(false);
   };
 
-  // ✅ ADD REMINDER
+  // ✅ MAIN FUNCTION (FULLY FIXED)
   const handleAddReminder = async () => {
     if (!title) {
       alert("Enter a title");
@@ -131,7 +131,8 @@ export default function NewReminder() {
       repeats: false,
     };
 
-    await Notifications.scheduleNotificationAsync({
+    // Schedule notification
+    const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body: description || "Reminder",
@@ -220,7 +221,7 @@ export default function NewReminder() {
             {/* 🔊 SOUND MODAL */}
             <Modal
               transparent
-              visible={soundPickerVisible}
+              visible={repeatPickerVisible}
               animationType="fade"
               onRequestClose={() => setSoundPickerVisible(false)}
             >
@@ -304,6 +305,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: "#222",
   },
+  label: { marginTop: 10 },
   input: {
     height: 50,
     backgroundColor: "#f1f1f1",
@@ -353,7 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center",  
   },
   modalContent: {
     width: 220,
