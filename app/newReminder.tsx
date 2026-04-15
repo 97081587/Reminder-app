@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -142,7 +141,7 @@ export default function NewReminder() {
     });
 
     await addReminder({
-      text: title,
+      title,
       description,
       date: new Date().toISOString(),
     });
@@ -221,7 +220,7 @@ export default function NewReminder() {
             {/* 🔊 SOUND MODAL */}
             <Modal
               transparent
-              visible={repeatPickerVisible}
+              visible={soundPickerVisible}
               animationType="fade"
               onRequestClose={() => setSoundPickerVisible(false)}
             >

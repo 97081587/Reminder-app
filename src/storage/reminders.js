@@ -29,7 +29,7 @@ export const addReminder = async (reminder) => {
 
   const newReminder = {
     id: Date.now(),
-    text: reminder.text,
+    title: reminder.title,
     description: reminder.description || "",
     date: reminder.date,
   };
@@ -59,10 +59,11 @@ export const toggleReminder = async (id) => {
 };
 
 // Edit reminder text
-export const editReminder = async (id, updatedFields) => {
-  const reminders = await getReminders();
+export const editReminder = async (id: number, updatedFields: any) => {
+  const stored = await AsyncStorage.getItem("reminders");
+  const reminders = stored ? JSON.parse(stored) : [];
 
-  const updated = reminders.map((r) =>
+  const updated = reminders.map((r: any) =>
     r.id === id ? { ...r, ...updatedFields } : r
   );
 
