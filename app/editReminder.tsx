@@ -117,6 +117,7 @@ export default function EditReminder() {
             />
           )}
 
+
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -142,17 +143,19 @@ export default function EditReminder() {
 //"CSS"
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 30,
+    fontSize: 34,
     color: "white",
     marginBottom: 30,
+    fontWeight: "600",
   },
   card: {
-    width: "85%",
+    width: "88%",
     backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 30,
     padding: 25,
@@ -160,27 +163,29 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 15,
     marginBottom: 8,
+    color: "#222",
   },
   input: {
-    height: 45,
-    backgroundColor: "white",
-    borderRadius: 30,
+    height: 50,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 25,
     paddingHorizontal: 15,
+    justifyContent: "center",
   },
   inputDesc: {
-    height: 80,
-    backgroundColor: "white",
+    height: 90,
+    backgroundColor: "#f1f1f1",
     borderRadius: 20,
     padding: 15,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 30,
+    marginTop: 25,
   },
   cancelBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#ccc",
     borderRadius: 25,
     justifyContent: "center",
@@ -188,7 +193,7 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#2f9e6f",
     borderRadius: 25,
     justifyContent: "center",
