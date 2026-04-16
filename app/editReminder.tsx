@@ -4,7 +4,6 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Button,
   Platform,
 } from "react-native";
 import DateTimePicker, {
@@ -12,7 +11,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { editReminder, getReminders } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, Link } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 
