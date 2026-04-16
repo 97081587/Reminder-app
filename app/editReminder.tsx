@@ -131,7 +131,7 @@ export default function EditReminder() {
               style={styles.addBtn}
               onPress={saveEditedReminder}
             >
-              <Text>Edit Reminder</Text>
+              <Text style={{ color: "white" }}>Edit Reminder</Text>
             </TouchableOpacity>
           </View>
         </View>
