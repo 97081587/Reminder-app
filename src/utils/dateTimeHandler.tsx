@@ -11,12 +11,6 @@ export const handleDateTimeChange = (
   setShowPicker: (show: boolean) => void,
   showMode: (mode: "date" | "time") => void,
 ) => {
-  
-  // Open picker
-  // const showMode = (currentMode: "date" | "time") => {
-  //   setMode(currentMode);
-  //   setShowPicker(true);
-  // };
 
   if (event.type === "set" && selectedDate) {
     const currentDate = new Date(date);
