@@ -14,7 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { onChangeDate } from "@/components/dateTimeHandler";
+import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -25,44 +25,11 @@ export default function EditReminder() {
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
 
-  // Open picker
+  // // Open picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
   };
-
-  // // Handle date/time change
-  // const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-  //   if (event.type === "set" && selectedDate) {
-  //     const currentDate = new Date(date);
-
-  //     if (mode === "date") {
-  //       currentDate.setFullYear(
-  //         selectedDate.getFullYear(),
-  //         selectedDate.getMonth(),
-  //         selectedDate.getDate(),
-  //       );
-  //       setDate(currentDate);
-
-  //       if (Platform.OS === "android") {
-  //         // Open time picker automatically on Android
-  //         showMode("time");
-  //         return; // Don't hide picker yet
-  //       }
-  //     } else if (mode === "time") {
-  //       currentDate.setHours(
-  //         selectedDate.getHours(),
-  //         selectedDate.getMinutes(),
-  //       );
-  //       setDate(currentDate);
-  //     }
-  //   }
-
-  //   // Hide picker on iOS or after time selection on Android
-  //   if (Platform.OS === "ios" || mode === "time") {
-  //     setShowPicker(false);
-  //   }
-  // };
 
   // Save edited reminder
   const saveEditedReminder = async () => {
@@ -139,7 +106,17 @@ export default function EditReminder() {
               value={date}
               mode={mode}
               display="default"
-              onChange={onChangeDate}
+              onChange={(event, selectedDate) =>
+                handleDateTimeChange(
+                  event,
+                  selectedDate,
+                  date,
+                  mode,
+                  setDate,
+                  setShowPicker,
+                  showMode,
+                )
+              }
             />
           )}
 
