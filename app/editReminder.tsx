@@ -121,7 +121,7 @@ export default function EditReminder() {
           {/* 🔊 SOUND */}
           <TouchableOpacity
             style={styles.pill}
-            onPress={() => setSoundPickerVisible(true)}
+            onPress={() => soundHandler(setSoundPickerVisible(true))}
           >
             <Text>🔔 Add Sound</Text>
           </TouchableOpacity>

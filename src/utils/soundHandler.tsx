@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { Audio } from "expo-av";
 
 export const soundHandler = async (soundUri: string) => {
+  // 🔊 MULTIPLE SOUNDS
+  const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
+  const [soundPickerVisible, setSoundPickerVisible] = useState(false);
+  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
+
   // 🔊 sound files
   const sounds = {
     bell: require("../assets/sounds/bell.mp3"),
