@@ -1,9 +1,19 @@
-
 import React, { useEffect, useState } from "react";
-import { Platform, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -19,7 +29,7 @@ Notifications.setNotificationHandler({
 });
 
 export default function NewReminder() {
-const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -30,7 +40,11 @@ const [menuOpen, setMenuOpen] = useState(false);
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
   const [repeatPickerVisible, setRepeatPickerVisible] = useState(false);
 
-  const repeatOptions: ("none" | "daily" | "weekly")[] = ["none", "daily", "weekly"];
+  const repeatOptions: ("none" | "daily" | "weekly")[] = [
+    "none",
+    "daily",
+    "weekly",
+  ];
 
   // 🔊 MULTIPLE SOUNDS
   const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
@@ -48,14 +62,20 @@ const [menuOpen, setMenuOpen] = useState(false);
   }, []);
 
   const toggleSound = (sound: string) => {
-    setSelectedSounds((prev) => (prev.includes(sound) ? prev.filter((s) => s !== sound) : [...prev, sound]));
+    setSelectedSounds((prev) =>
+      prev.includes(sound) ? prev.filter((s) => s !== sound) : [...prev, sound],
+    );
   };
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     // On Android, selectedDate may be undefined when dismissed
     if (selectedDate) {
       const newDate = new Date(date);
-      newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      newDate.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
       setDate(newDate);
     }
     if (Platform.OS === "android") {
@@ -142,7 +162,9 @@ const [menuOpen, setMenuOpen] = useState(false);
   // 🔊 TEST SOUND
   const testSound = async () => {
     try {
-      const { sound } = await Audio.Sound.createAsync(require("../../assets/sounds/bell.mp3"));
+      const { sound } = await Audio.Sound.createAsync(
+        require("../../assets/sounds/bell.mp3"),
+      );
       await sound.playAsync();
     } catch (e) {
       // ignore
@@ -153,30 +175,40 @@ const [menuOpen, setMenuOpen] = useState(false);
     <SafeAreaProvider>
       <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
         {/* Hamburger */}
-  {!menuOpen && (
-  <View style={{ position: "absolute", top: 100, left: 20, zIndex: 100 }}>
-    <TouchableOpacity
-      onPress={() => setMenuOpen(true)}
-      style={{
-        width: 52,
-        height: 52,
-        borderRadius: 16,
-        backgroundColor: "#f4b36a",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
-    </TouchableOpacity>
-  </View>
-)}
+        {!menuOpen && (
+          <View
+            style={{ position: "absolute", top: 100, left: 20, zIndex: 100 }}
+          >
+            <TouchableOpacity
+              onPress={() => setMenuOpen(true)}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 16,
+                backgroundColor: "#f4b36a",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 26, color: "white" }}>☰</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.header}>New Reminder</Text>
 
           <View style={styles.card}>
             <Text>Title</Text>
-            <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Enter title" />
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter title"
+            />
 
             <Text style={{ marginTop: 8 }}>Description</Text>
             <TextInput
@@ -188,12 +220,18 @@ const [menuOpen, setMenuOpen] = useState(false);
             />
 
             <Text style={{ marginTop: 8 }}>Date</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Text>{date.toLocaleDateString()}</Text>
             </TouchableOpacity>
 
             <Text style={{ marginTop: 8 }}>Time</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowTimePicker(true)}
+            >
               <Text>
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
@@ -202,11 +240,26 @@ const [menuOpen, setMenuOpen] = useState(false);
               </Text>
             </TouchableOpacity>
 
-            {showDatePicker && <DateTimePicker value={date} mode="date" onChange={onChangeDate} />}
-            {showTimePicker && <DateTimePicker value={date} mode="time" onChange={onChangeTime} />}
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                onChange={onChangeDate}
+              />
+            )}
+            {showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                onChange={onChangeTime}
+              />
+            )}
 
             <Text style={{ marginTop: 8 }}>Repeat</Text>
-            <TouchableOpacity style={styles.input} onPress={() => setRepeatPickerVisible(true)}>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setRepeatPickerVisible(true)}
+            >
               <Text>{repeat}</Text>
             </TouchableOpacity>
 
@@ -217,9 +270,17 @@ const [menuOpen, setMenuOpen] = useState(false);
         </ScrollView>
 
         {/* Repeat Modal */}
-        <Modal transparent animationType="fade" visible={repeatPickerVisible} onRequestClose={() => setRepeatPickerVisible(false)}>
+        <Modal
+          transparent
+          animationType="fade"
+          visible={repeatPickerVisible}
+          onRequestClose={() => setRepeatPickerVisible(false)}
+        >
           <View style={modalStyles.modalOverlay}>
-            <LinearGradient colors={["#2a8c82", "#d1913c"]} style={modalStyles.modalContent}>
+            <LinearGradient
+              colors={["#2a8c82", "#d1913c"]}
+              style={modalStyles.modalContent}
+            >
               {repeatOptions.map((option) => (
                 <TouchableOpacity
                   key={option}
@@ -233,55 +294,78 @@ const [menuOpen, setMenuOpen] = useState(false);
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
-                style={[modalStyles.option, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+                style={[
+                  modalStyles.option,
+                  { backgroundColor: "rgba(255,255,255,0.2)" },
+                ]}
                 onPress={() => setRepeatPickerVisible(false)}
               >
-                <Text style={[modalStyles.optionText, { color: "white" }]}>Cancel</Text>
+                <Text style={[modalStyles.optionText, { color: "white" }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
             </LinearGradient>
           </View>
         </Modal>
         {menuOpen && (
-  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-    
-    <TouchableOpacity
-      style={{ flex: 1, backgroundColor: "rgba(244,179,106,0.25)" }}
-      onPress={() => setMenuOpen(false)}
-    />
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          >
+            <TouchableOpacity
+              style={{ flex: 1, backgroundColor: "rgba(244,179,106,0.25)" }}
+              onPress={() => setMenuOpen(false)}
+            />
 
-    <View
-      style={{
-        width: 260,
-        height: "100%",
-        backgroundColor: "#f4b36a",
-        position: "absolute",
-        left: 0,
-        padding: 20
-      }}
-    >
-      <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
-        Menu
-      </Text>
+            <View
+              style={{
+                width: 260,
+                height: "100%",
+                backgroundColor: "#f4b36a",
+                position: "absolute",
+                left: 0,
+                padding: 20,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontSize: 20, fontWeight: "bold" }}
+              >
+                Menu
+              </Text>
 
-      <Text style={{ color: "white", marginTop: 20 }}>Home</Text>
-      <Text style={{ color: "white", marginTop: 10 }}>Reminders</Text>
-      <Text style={{ color: "white", marginTop: 10 }}>Settings</Text>
+              <Text style={{ color: "white", marginTop: 20 }}>Home</Text>
+              <Text style={{ color: "white", marginTop: 10 }}>Reminders</Text>
+              <Text style={{ color: "white", marginTop: 10 }}>Settings</Text>
 
-      <TouchableOpacity onPress={() => setMenuOpen(false)}>
-        <Text style={{ color: "white", marginTop: 30 }}>Close</Text>
-      </TouchableOpacity>
-    </View>
-
-  </View>
-)}
+              <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                <Text style={{ color: "white", marginTop: 30 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </LinearGradient>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: "center", paddingTop: 100, paddingBottom: 40 },
-  header: { fontSize: 28, color: "white", marginBottom: 20, fontWeight: "bold" },
+  container: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 100,
+    paddingBottom: 40,
+  },
+  header: {
+    fontSize: 28,
+    color: "white",
+    marginBottom: 20,
+    fontWeight: "bold",
+  },
   card: {
     width: "85%",
     backgroundColor: "rgba(255,255,255,0.3)",
