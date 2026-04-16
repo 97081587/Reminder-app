@@ -4,17 +4,14 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Button,
-  Platform,
 } from "react-native";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { editReminder, getReminders } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, Link } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
+import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -29,39 +26,6 @@ export default function EditReminder() {
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
-  };
-
-  // Handle date/time change
-  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "set" && selectedDate) {
-      const currentDate = new Date(date);
-
-      if (mode === "date") {
-        currentDate.setFullYear(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-        );
-        setDate(currentDate);
-
-        if (Platform.OS === "android") {
-          // Open time picker automatically on Android
-          showMode("time");
-          return; // Don't hide picker yet
-        }
-      } else if (mode === "time") {
-        currentDate.setHours(
-          selectedDate.getHours(),
-          selectedDate.getMinutes(),
-        );
-        setDate(currentDate);
-      }
-    }
-
-    // Hide picker on iOS or after time selection on Android
-    if (Platform.OS === "ios" || mode === "time") {
-      setShowPicker(false);
-    }
   };
 
   // Save edited reminder
@@ -139,9 +103,20 @@ export default function EditReminder() {
               value={date}
               mode={mode}
               display="default"
-              onChange={onChangeDate}
+              onChange={(event, selectedDate) =>
+                handleDateTimeChange(
+                  event,
+                  selectedDate,
+                  date,
+                  mode,
+                  setDate,
+                  setShowPicker,
+                  showMode,
+                )
+              }
             />
           )}
+
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
@@ -156,7 +131,7 @@ export default function EditReminder() {
               style={styles.addBtn}
               onPress={saveEditedReminder}
             >
-              <Text>Edit Reminder</Text>
+              <Text style={{ color: "white" }}>Edit Reminder</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -168,17 +143,19 @@ export default function EditReminder() {
 //"CSS"
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 30,
+    fontSize: 34,
     color: "white",
     marginBottom: 30,
+    fontWeight: "600",
   },
   card: {
-    width: "85%",
+    width: "88%",
     backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 30,
     padding: 25,
@@ -186,27 +163,29 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 15,
     marginBottom: 8,
+    color: "#222",
   },
   input: {
-    height: 45,
-    backgroundColor: "white",
-    borderRadius: 30,
+    height: 50,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 25,
     paddingHorizontal: 15,
+    justifyContent: "center",
   },
   inputDesc: {
-    height: 80,
-    backgroundColor: "white",
+    height: 90,
+    backgroundColor: "#f1f1f1",
     borderRadius: 20,
     padding: 15,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 30,
+    marginTop: 25,
   },
   cancelBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#ccc",
     borderRadius: 25,
     justifyContent: "center",
@@ -214,7 +193,7 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#2f9e6f",
     borderRadius: 25,
     justifyContent: "center",
