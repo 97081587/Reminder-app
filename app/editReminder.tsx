@@ -126,6 +126,45 @@ export default function EditReminder() {
             <Text>🔔 Add Sound</Text>
           </TouchableOpacity>
 
+          {/* 🔊 SOUND MODAL */}
+          {/* <Modal
+            transparent
+            visible={soundPickerVisible}
+            animationType="fade"
+            onRequestClose={() => setSoundPickerVisible(false)}
+          >
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPressOut={() => setSoundPickerVisible(false)}
+            >
+              <View style={styles.modalContent}>
+                {(["bell", "chime", "mijn"] as const).map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.option,
+                      item === sound && styles.activeOption,
+                    ]}
+                    onPress={() => {
+                      setSound(item);
+                      playSound(item);
+                      setSoundPickerVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: item === sound ? "white" : "black",
+                      }}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal> */}
+
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
