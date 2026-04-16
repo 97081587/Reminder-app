@@ -22,7 +22,7 @@ export default function EditReminder() {
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
 
-  // // Open picker
+  // Open picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
