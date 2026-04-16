@@ -117,6 +117,13 @@ export default function EditReminder() {
             />
           )}
 
+          {/* 🔊 SOUND */}
+          <TouchableOpacity
+            style={styles.pill}
+            onPress={() => setSoundPickerVisible(true)}
+          >
+            <Text>🔔 Add Sound</Text>
+          </TouchableOpacity>
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
