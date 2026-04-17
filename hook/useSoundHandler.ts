@@ -5,7 +5,6 @@ export const useSoundHandler = () => {
   // 🔊 MULTIPLE SOUNDS
   const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-  //   const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
 
   // 🔊 sound files
   const sounds = {
