@@ -257,4 +257,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  pill: {
+    backgroundColor: "#eee",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 220,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 10,
+  },
+  option: {
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  activeOption: {
+    backgroundColor: "#2f9e6f",
+  },
 });
