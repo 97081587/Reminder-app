@@ -5,6 +5,7 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { editReminder, getReminders } from "@/src/storage/reminders";
@@ -24,6 +25,7 @@ export default function EditReminder() {
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
   const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
+  const [location, setLocation] = useState<string | null>(null);
 
   // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
@@ -42,6 +44,8 @@ export default function EditReminder() {
       title,
       description,
       date: date.toISOString(),
+      sound,
+      location,
     });
 
     router.back();
@@ -56,6 +60,8 @@ export default function EditReminder() {
         setTitle(reminder.title || "");
         setDescription(reminder.description || "");
         setDate(reminder.date ? new Date(reminder.date) : new Date());
+        setSound(reminder.sound || "bell");
+        setLocation(reminder.location || null);
       }
     };
 
@@ -70,6 +76,12 @@ export default function EditReminder() {
     setSoundPickerVisible,
     playSound,
   } = useSoundHandler();
+
+  // 📍 open maps
+  const handleAddLocation = () => {
+    setLocation("Opened Maps");
+    Linking.openURL("https://www.google.com/maps");
+  };
 
   //"HTML"
   return (
@@ -175,6 +187,12 @@ export default function EditReminder() {
               </View>
             </TouchableOpacity>
           </Modal>
+
+          {/* 📍 LOCATION */}
+          <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
+            <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
+          </TouchableOpacity>
+          {/* </View> */}
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
