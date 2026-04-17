@@ -23,6 +23,7 @@ export default function EditReminder() {
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
+  const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
 
   // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
