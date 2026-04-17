@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
-import { soundHandler } from "@/src/utils/soundHandler";
+import { useSoundHandler } from "@/hook/useSoundHandler";
 
 export default function EditReminder() {
   const router = useRouter();

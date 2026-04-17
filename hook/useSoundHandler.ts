@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Audio } from "expo-av";
 
-export const soundHandler = async (soundUri: string) => {
+export const useSoundHandler = () => {
   // 🔊 MULTIPLE SOUNDS
   const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
+  //   const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
 
   // 🔊 sound files
   const sounds = {
@@ -22,5 +22,13 @@ export const soundHandler = async (soundUri: string) => {
     } catch (e) {
       console.log("Sound error:", e);
     }
+  };
+
+  return {
+    selectedSounds,
+    setSelectedSounds,
+    soundPickerVisible,
+    setSoundPickerVisible,
+    playSound,
   };
 };
