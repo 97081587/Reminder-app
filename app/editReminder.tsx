@@ -136,7 +136,7 @@ export default function EditReminder() {
           </TouchableOpacity>
 
           {/* 🔊 SOUND MODAL */}
-          {/* <Modal
+          <Modal
             transparent
             visible={soundPickerVisible}
             animationType="fade"
@@ -172,7 +172,7 @@ export default function EditReminder() {
                 ))}
               </View>
             </TouchableOpacity>
-          </Modal> */}
+          </Modal>
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>

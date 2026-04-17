@@ -9,9 +9,9 @@ export const useSoundHandler = () => {
 
   // 🔊 sound files
   const sounds = {
-    bell: require("../../assets/sounds/bell.mp3"),
-    chime: require("../../assets/sounds/chime.mp3"),
-    mijn: require("../../assets/sounds/mijn.mp3"),
+    bell: require("../assets/sounds/bell.mp3"),
+    chime: require("../assets/sounds/chime.mp3"),
+    mijn: require("../assets/sounds/mijn.mp3"),
   };
 
   // 🔊 play preview
