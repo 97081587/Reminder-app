@@ -60,6 +60,15 @@ export default function EditReminder() {
     loadReminder();
   }, [id]);
 
+  // 🔊 SOUND HANDLER 🗣️❗❗🔥🔥🔥
+  const {
+    selectedSounds,
+    setSelectedSounds,
+    soundPickerVisible,
+    setSoundPickerVisible,
+    playSound,
+  } = useSoundHandler();
+
   //"HTML"
   return (
     <LinearGradient colors={["#2a8c82", "#d1913c"]} style={{ flex: 1 }}>
@@ -121,7 +130,7 @@ export default function EditReminder() {
           {/* 🔊 SOUND */}
           <TouchableOpacity
             style={styles.pill}
-            onPress={() => soundHandler(setSoundPickerVisible(true))}
+            onPress={() => setSoundPickerVisible(true)}
           >
             <Text>🔔 Add Sound</Text>
           </TouchableOpacity>
