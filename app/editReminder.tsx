@@ -2,8 +2,10 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
   TextInput,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { editReminder, getReminders } from "@/src/storage/reminders";
@@ -12,7 +14,7 @@ import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
-import { soundHandler } from "@/src/utils/soundHandler";
+import { useSoundHandler } from "@/hook/useSoundHandler";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -22,8 +24,10 @@ export default function EditReminder() {
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
+  const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
+  const [location, setLocation] = useState<string | null>(null);
 
-  // Open picker
+  // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
@@ -40,6 +44,8 @@ export default function EditReminder() {
       title,
       description,
       date: date.toISOString(),
+      sound,
+      location,
     });
 
     router.back();
@@ -54,11 +60,28 @@ export default function EditReminder() {
         setTitle(reminder.title || "");
         setDescription(reminder.description || "");
         setDate(reminder.date ? new Date(reminder.date) : new Date());
+        setSound(reminder.sound || "bell");
+        setLocation(reminder.location || null);
       }
     };
 
     loadReminder();
   }, [id]);
+
+  // 🔊 SOUND HANDLER 🗣️❗❗🔥🔥🔥
+  const {
+    selectedSounds,
+    setSelectedSounds,
+    soundPickerVisible,
+    setSoundPickerVisible,
+    playSound,
+  } = useSoundHandler();
+
+  // 📍 open maps
+  const handleAddLocation = () => {
+    setLocation("Opened Maps");
+    Linking.openURL("https://www.google.com/maps");
+  };
 
   //"HTML"
   return (
@@ -118,52 +141,60 @@ export default function EditReminder() {
             />
           )}
 
-          {/* 🔊 SOUND */}
-          <TouchableOpacity
-            style={styles.pill}
-            onPress={() => soundHandler(setSoundPickerVisible(true))}
-          >
-            <Text>🔔 Add Sound</Text>
-          </TouchableOpacity>
-
-          {/* 🔊 SOUND MODAL */}
-          {/* <Modal
-            transparent
-            visible={soundPickerVisible}
-            animationType="fade"
-            onRequestClose={() => setSoundPickerVisible(false)}
-          >
+          {/* ✅ PILLS UNDER DATE */}
+          <View style={styles.pillRow}>
+            {/* 🔊 SOUND */}
             <TouchableOpacity
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPressOut={() => setSoundPickerVisible(false)}
+              style={styles.pill}
+              onPress={() => setSoundPickerVisible(true)}
             >
-              <View style={styles.modalContent}>
-                {(["bell", "chime", "mijn"] as const).map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.option,
-                      item === sound && styles.activeOption,
-                    ]}
-                    onPress={() => {
-                      setSound(item);
-                      playSound(item);
-                      setSoundPickerVisible(false);
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: item === sound ? "white" : "black",
+              <Text>🔔 Add Sound</Text>
+            </TouchableOpacity>
+
+            {/* 🔊 SOUND MODAL */}
+            <Modal
+              transparent
+              visible={soundPickerVisible}
+              animationType="fade"
+              onRequestClose={() => setSoundPickerVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setSoundPickerVisible(false)}
+              >
+                <View style={styles.modalContent}>
+                  {(["bell", "chime", "mijn"] as const).map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.option,
+                        item === sound && styles.activeOption,
+                      ]}
+                      onPress={() => {
+                        setSound(item);
+                        playSound(item);
+                        setSoundPickerVisible(false);
                       }}
                     >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={{
+                          color: item === sound ? "white" : "black",
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            {/* 📍 LOCATION */}
+            <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
+              <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
             </TouchableOpacity>
-          </Modal> */}
+          </View>
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
@@ -245,5 +276,36 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pillRow: {
+    flexDirection: "row",
+    marginTop: 15,
+    gap: 10,
+  },
+  pill: {
+    backgroundColor: "#eee",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 220,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 10,
+  },
+  option: {
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  activeOption: {
+    backgroundColor: "#2f9e6f",
   },
 });
