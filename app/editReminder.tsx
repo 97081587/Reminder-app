@@ -141,58 +141,60 @@ export default function EditReminder() {
             />
           )}
 
-          {/* 🔊 SOUND */}
-          <TouchableOpacity
-            style={styles.pill}
-            onPress={() => setSoundPickerVisible(true)}
-          >
-            <Text>🔔 Add Sound</Text>
-          </TouchableOpacity>
-
-          {/* 🔊 SOUND MODAL */}
-          <Modal
-            transparent
-            visible={soundPickerVisible}
-            animationType="fade"
-            onRequestClose={() => setSoundPickerVisible(false)}
-          >
+          {/* ✅ PILLS UNDER DATE */}
+          <View style={styles.pillRow}>
+            {/* 🔊 SOUND */}
             <TouchableOpacity
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPressOut={() => setSoundPickerVisible(false)}
+              style={styles.pill}
+              onPress={() => setSoundPickerVisible(true)}
             >
-              <View style={styles.modalContent}>
-                {(["bell", "chime", "mijn"] as const).map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.option,
-                      item === sound && styles.activeOption,
-                    ]}
-                    onPress={() => {
-                      setSound(item);
-                      playSound(item);
-                      setSoundPickerVisible(false);
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: item === sound ? "white" : "black",
+              <Text>🔔 Add Sound</Text>
+            </TouchableOpacity>
+
+            {/* 🔊 SOUND MODAL */}
+            <Modal
+              transparent
+              visible={soundPickerVisible}
+              animationType="fade"
+              onRequestClose={() => setSoundPickerVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setSoundPickerVisible(false)}
+              >
+                <View style={styles.modalContent}>
+                  {(["bell", "chime", "mijn"] as const).map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.option,
+                        item === sound && styles.activeOption,
+                      ]}
+                      onPress={() => {
+                        setSound(item);
+                        playSound(item);
+                        setSoundPickerVisible(false);
                       }}
                     >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </Modal>
+                      <Text
+                        style={{
+                          color: item === sound ? "white" : "black",
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            </Modal>
 
-          {/* 📍 LOCATION */}
-          <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
-            <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
-          </TouchableOpacity>
-          {/* </View> */}
+            {/* 📍 LOCATION */}
+            <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
+              <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
@@ -274,6 +276,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pillRow: {
+    flexDirection: "row",
+    marginTop: 15,
+    gap: 10,
   },
   pill: {
     backgroundColor: "#eee",
