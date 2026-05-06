@@ -2,19 +2,19 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
   TextInput,
   TouchableOpacity,
-  Button,
-  Platform,
+  Linking,
 } from "react-native";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { editReminder, getReminders } from "@/src/storage/reminders";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, Link } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
+import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
+import { useSoundHandler } from "@/hook/useSoundHandler";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -24,44 +24,13 @@ export default function EditReminder() {
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
   const { id } = useLocalSearchParams();
+  const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
+  const [location, setLocation] = useState<string | null>(null);
 
-  // Open picker
+  // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
-  };
-
-  // Handle date/time change
-  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "set" && selectedDate) {
-      const currentDate = new Date(date);
-
-      if (mode === "date") {
-        currentDate.setFullYear(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-        );
-        setDate(currentDate);
-
-        if (Platform.OS === "android") {
-          // Open time picker automatically on Android
-          showMode("time");
-          return; // Don't hide picker yet
-        }
-      } else if (mode === "time") {
-        currentDate.setHours(
-          selectedDate.getHours(),
-          selectedDate.getMinutes(),
-        );
-        setDate(currentDate);
-      }
-    }
-
-    // Hide picker on iOS or after time selection on Android
-    if (Platform.OS === "ios" || mode === "time") {
-      setShowPicker(false);
-    }
   };
 
   // Save edited reminder
@@ -75,6 +44,8 @@ export default function EditReminder() {
       title,
       description,
       date: date.toISOString(),
+      sound,
+      location,
     });
 
     router.back();
@@ -89,11 +60,28 @@ export default function EditReminder() {
         setTitle(reminder.title || "");
         setDescription(reminder.description || "");
         setDate(reminder.date ? new Date(reminder.date) : new Date());
+        setSound(reminder.sound || "bell");
+        setLocation(reminder.location || null);
       }
     };
 
     loadReminder();
   }, [id]);
+
+  // 🔊 SOUND HANDLER 🗣️❗❗🔥🔥🔥
+  const {
+    selectedSounds,
+    setSelectedSounds,
+    soundPickerVisible,
+    setSoundPickerVisible,
+    playSound,
+  } = useSoundHandler();
+
+  // 📍 open maps
+  const handleAddLocation = () => {
+    setLocation("Opened Maps");
+    Linking.openURL("https://www.google.com/maps");
+  };
 
   //"HTML"
   return (
@@ -139,9 +127,74 @@ export default function EditReminder() {
               value={date}
               mode={mode}
               display="default"
-              onChange={onChangeDate}
+              onChange={(event, selectedDate) =>
+                handleDateTimeChange(
+                  event,
+                  selectedDate,
+                  date,
+                  mode,
+                  setDate,
+                  setShowPicker,
+                  showMode,
+                )
+              }
             />
           )}
+
+          {/* ✅ PILLS UNDER DATE */}
+          <View style={styles.pillRow}>
+            {/* 🔊 SOUND */}
+            <TouchableOpacity
+              style={styles.pill}
+              onPress={() => setSoundPickerVisible(true)}
+            >
+              <Text>🔔 Add Sound</Text>
+            </TouchableOpacity>
+
+            {/* 🔊 SOUND MODAL */}
+            <Modal
+              transparent
+              visible={soundPickerVisible}
+              animationType="fade"
+              onRequestClose={() => setSoundPickerVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setSoundPickerVisible(false)}
+              >
+                <View style={styles.modalContent}>
+                  {(["bell", "chime", "mijn"] as const).map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.option,
+                        item === sound && styles.activeOption,
+                      ]}
+                      onPress={() => {
+                        setSound(item);
+                        playSound(item);
+                        setSoundPickerVisible(false);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: item === sound ? "white" : "black",
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            {/* 📍 LOCATION */}
+            <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
+              <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* cancel and edit buttons */}
           <View style={styles.buttonContainer}>
@@ -156,7 +209,7 @@ export default function EditReminder() {
               style={styles.addBtn}
               onPress={saveEditedReminder}
             >
-              <Text>Edit Reminder</Text>
+              <Text style={{ color: "white" }}>Edit Reminder</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -168,17 +221,19 @@ export default function EditReminder() {
 //"CSS"
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 30,
+    fontSize: 34,
     color: "white",
     marginBottom: 30,
+    fontWeight: "600",
   },
   card: {
-    width: "85%",
+    width: "88%",
     backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 30,
     padding: 25,
@@ -186,27 +241,29 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 15,
     marginBottom: 8,
+    color: "#222",
   },
   input: {
-    height: 45,
-    backgroundColor: "white",
-    borderRadius: 30,
+    height: 50,
+    backgroundColor: "#f1f1f1",
+    borderRadius: 25,
     paddingHorizontal: 15,
+    justifyContent: "center",
   },
   inputDesc: {
-    height: 80,
-    backgroundColor: "white",
+    height: 90,
+    backgroundColor: "#f1f1f1",
     borderRadius: 20,
     padding: 15,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 30,
+    marginTop: 25,
   },
   cancelBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#ccc",
     borderRadius: 25,
     justifyContent: "center",
@@ -214,10 +271,41 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     width: "45%",
-    height: 45,
+    height: 50,
     backgroundColor: "#2f9e6f",
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pillRow: {
+    flexDirection: "row",
+    marginTop: 15,
+    gap: 10,
+  },
+  pill: {
+    backgroundColor: "#eee",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 220,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 10,
+  },
+  option: {
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  activeOption: {
+    backgroundColor: "#2f9e6f",
   },
 });
