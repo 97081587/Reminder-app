@@ -1,5 +1,10 @@
-// import { Stack } from "expo-router";
+import { Drawer } from "expo-router/drawer";
 
-// export default function RootLayout() {
-//   return <Stack />;
-// }
+export default function RootLayout() {
+  return (
+    <Drawer>
+      <Drawer.Screen name="index" />
+      <Drawer.Screen name="newReminder" />
+    </Drawer>
+  );
+}
