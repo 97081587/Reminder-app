@@ -22,12 +22,6 @@ export default function Home() {
     setReminders(stored ? JSON.parse(stored) : []);
   };
 
-  // Delete reminder and refresh list
-  const handleDelete = async (id) => {
-    const updated = await deleteReminder(id);
-    setReminders(updated);
-  };
-
   useFocusEffect(
     useCallback(() => {
       loadReminders();
@@ -45,7 +39,7 @@ export default function Home() {
           padding: 25,
         }}
       >
-        <Text>{item.title}</Text>
+        <Text>{item.text}</Text>
         <TouchableOpacity onPress={() => onDelete(item.id)}>
           <Text>🗑️</Text>
         </TouchableOpacity>
@@ -68,7 +62,7 @@ export default function Home() {
           data={reminders}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <ReminderCard item={item} onDelete={handleDelete} />
+            <ReminderCard item={item} onDelete={deleteReminder} />
           )}
         />
 
