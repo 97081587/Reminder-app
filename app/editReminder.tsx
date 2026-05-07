@@ -28,6 +28,7 @@ export default function EditReminder() {
   const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
   const [location, setLocation] = useState<string | null>(null);
   const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [notificationId, setNotificationId] = useState<string | null>(null);
 
   // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
@@ -43,11 +44,6 @@ export default function EditReminder() {
     }
 
     let { status } = await Notifications.requestPermissionsAsync();
-    // let finalStatus = status;
-    // if (status !== "granted") {
-    //   const res = await Notifications.requestPermissionsAsync();
-    //   finalStatus = res.status;
-    // }
 
     if (status !== "granted") {
       alert("Permission not granted");
