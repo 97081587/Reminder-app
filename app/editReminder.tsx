@@ -27,6 +27,7 @@ export default function EditReminder() {
   const { id } = useLocalSearchParams();
   const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
   const [location, setLocation] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
 
   // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
@@ -36,15 +37,47 @@ export default function EditReminder() {
 
   // Edit reminder notification
   const handleEditReminder = async () => {
-      const updatedId = await editReminder( 
-        notificationId, 
-      {
-        title,
-        body: description,
-      },
-        trigger
-      );
-  }
+    if (!title.trim()) {
+      alert("Enter title");
+      return;
+    }
+
+    let { status } = await Notifications.requestPermissionsAsync();
+    let finalStatus = status;
+    if (finalStatus !== "granted") {
+      const res = await Notifications.requestPermissionsAsync();
+      finalStatus = res.status;
+    }
+
+    if (finalStatus !== "granted") {
+      alert("Permission not granted");
+      return;
+    }
+
+    let trigger: any;
+    if (repeat === "daily") {
+      trigger = {
+        type: "calendar",
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        type: "calendar",
+        weekday: date.getDay() + 1,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = { type: "date", date };
+    }
+    const updatedId = await Notifications.scheduleNotificationAsync({
+      content: { title, body: description },
+      trigger,
+    });
+  };
 
   // Save edited reminder
   const saveEditedReminder = async () => {
