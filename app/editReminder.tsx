@@ -43,13 +43,13 @@ export default function EditReminder() {
     }
 
     let { status } = await Notifications.requestPermissionsAsync();
-    let finalStatus = status;
-    if (finalStatus !== "granted") {
-      const res = await Notifications.requestPermissionsAsync();
-      finalStatus = res.status;
-    }
+    // let finalStatus = status;
+    // if (status !== "granted") {
+    //   const res = await Notifications.requestPermissionsAsync();
+    //   finalStatus = res.status;
+    // }
 
-    if (finalStatus !== "granted") {
+    if (status !== "granted") {
       alert("Permission not granted");
       return;
     }
@@ -73,6 +73,15 @@ export default function EditReminder() {
     } else {
       trigger = { type: "date", date };
     }
+
+    try {
+      // Cancel old notification
+      if (notificationId) {
+        await Notifications.cancelScheduledNotificationAsync(notificationId);
+      }
+    }
+
+    //create new notification
     const updatedId = await Notifications.scheduleNotificationAsync({
       content: { title, body: description },
       trigger,

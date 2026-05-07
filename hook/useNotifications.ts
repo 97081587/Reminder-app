@@ -50,8 +50,6 @@ export function useNotifications() {
     oldNotificationId: string,
     newText: string,
     newSeconds: number
-    // content: Notifications.NotificationContentInput,
-    // trigger: Notifications.NotificationTriggerInput 
   ) {
     // remove old notification
     await Notifications.cancelScheduledNotificationAsync(
@@ -69,8 +67,6 @@ export function useNotifications() {
           seconds: newSeconds,
           repeats: false,
         },
-      // content,
-      // trigger,
     });
   }
 }
