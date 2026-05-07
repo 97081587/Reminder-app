@@ -33,6 +33,12 @@ export default function EditReminder() {
     setShowPicker(true);
   };
 
+  // Edit reminder notification
+      const updatedId = await editReminder( notificationId,{
+        content: { title, body: description },
+        trigger,
+      });
+
   // Save edited reminder
   const saveEditedReminder = async () => {
     if (date < new Date()) {

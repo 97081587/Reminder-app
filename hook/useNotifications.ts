@@ -43,15 +43,15 @@ export function useNotifications() {
     });
   }
 
-  // edit reminder by canceling old and scheduling new
+  // edit reminder notification by canceling old and scheduling new
   async function editReminder(
-    oldNotficationId: string,
+    oldNotificationId: string,
     newText: string,
     newSeconds: number 
   ) {
     // remove old notification
     await Notifications.cancelScheduledNotificationAsync(
-      oldNotficationId
+      oldNotificationId
     );
 
     // create new notification
