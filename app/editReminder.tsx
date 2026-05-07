@@ -34,10 +34,17 @@ export default function EditReminder() {
   };
 
   // Edit reminder notification
-      const updatedId = await editReminder( notificationId,{
-        content: { title, body: description },
-        trigger,
-      });
+      // const updatedId = await editReminder( notificationId,{
+      //   content: { title, body: description },
+      //   trigger,
+      // });
+      
+  const handlEditReminder = async () => {
+          const notificationId = await Notifications.scheduleNotificationAsync({
+            content: { title, body: description },
+            trigger,
+          });
+  }
 
   // Save edited reminder
   const saveEditedReminder = async () => {
