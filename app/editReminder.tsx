@@ -75,13 +75,19 @@ export default function EditReminder() {
       if (notificationId) {
         await Notifications.cancelScheduledNotificationAsync(notificationId);
       }
-    }
 
     //create new notification
     const updatedId = await Notifications.scheduleNotificationAsync({
       content: { title, body: description },
       trigger,
     });
+
+    console.log("Updated notification ID:", updatedId);
+
+      // save updatedId in AsyncStorage/database
+    } catch (error) {
+      console.log("Edit reminder error:", error);
+    }
   };
 
   // Save edited reminder
