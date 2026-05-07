@@ -46,8 +46,8 @@ export function useNotifications() {
   // edit reminder notification by canceling old and scheduling new
   async function editReminder(
     oldNotificationId: string,
-    newText: string,
-    newSeconds: number 
+    content: Notifications.NotificationContentInput,
+    trigger: Notifications.NotificationTriggerInput 
   ) {
     // remove old notification
     await Notifications.cancelScheduledNotificationAsync(
@@ -56,15 +56,8 @@ export function useNotifications() {
 
     // create new notification
     const newNotificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Reminder ⏰",
-        body: newText,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: newSeconds,
-        repeats: false,
-      },
+      content,
+      trigger,
     });
   }
 }

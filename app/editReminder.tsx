@@ -36,13 +36,12 @@ export default function EditReminder() {
 
   // Edit reminder notification
   const handlEditReminder = async () => {
-          // const updatedId = await Notifications.scheduleNotificationAsync({
-          //   content: { title, body: description },
-          //   trigger,
-          // });
-
-      const updatedId = await editReminder( notificationId,
-        content: { title, body: description },
+      const updatedId = await editReminder( 
+        notificationId, 
+      {
+        title,
+        body: description,
+      },
         trigger,
       );
   }
