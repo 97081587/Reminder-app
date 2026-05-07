@@ -15,6 +15,7 @@ import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
 import { useSoundHandler } from "@/hook/useSoundHandler";
+import * as Notifications from "expo-notifications";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -26,11 +27,67 @@ export default function EditReminder() {
   const { id } = useLocalSearchParams();
   const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
   const [location, setLocation] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
+  const [notificationId, setNotificationId] = useState<string | null>(null);
 
   // Open date time picker
   const showMode = (currentMode: "date" | "time") => {
     setMode(currentMode);
     setShowPicker(true);
+  };
+
+  // Edit reminder notification
+  const handleEditReminder = async () => {
+    if (!title.trim()) {
+      alert("Enter title");
+      return;
+    }
+
+    let { status } = await Notifications.requestPermissionsAsync();
+
+    if (status !== "granted") {
+      alert("Permission not granted");
+      return;
+    }
+
+    let trigger: any;
+    if (repeat === "daily") {
+      trigger = {
+        type: "calendar",
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        type: "calendar",
+        weekday: date.getDay() + 1,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = { type: "date", date };
+    }
+
+    try {
+      // Cancel old notification
+      if (notificationId) {
+        await Notifications.cancelScheduledNotificationAsync(notificationId);
+      }
+
+    //create new notification
+    const updatedId = await Notifications.scheduleNotificationAsync({
+      content: { title, body: description },
+      trigger,
+    });
+
+    console.log("Updated notification ID:", updatedId);
+
+      // save updatedId in AsyncStorage/database
+    } catch (error) {
+      console.log("Edit reminder error:", error);
+    }
   };
 
   // Save edited reminder
