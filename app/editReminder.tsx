@@ -15,6 +15,7 @@ import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { handleDateTimeChange } from "@/src/utils/dateTimeHandler";
 import { useSoundHandler } from "@/hook/useSoundHandler";
+import * as Notifications from "expo-notifications";
 
 export default function EditReminder() {
   const router = useRouter();
@@ -34,16 +35,16 @@ export default function EditReminder() {
   };
 
   // Edit reminder notification
-      // const updatedId = await editReminder( notificationId,{
-      //   content: { title, body: description },
-      //   trigger,
-      // });
-      
   const handlEditReminder = async () => {
-          const notificationId = await Notifications.scheduleNotificationAsync({
-            content: { title, body: description },
-            trigger,
-          });
+          // const updatedId = await Notifications.scheduleNotificationAsync({
+          //   content: { title, body: description },
+          //   trigger,
+          // });
+
+      const updatedId = await editReminder( notificationId,
+        content: { title, body: description },
+        trigger,
+      );
   }
 
   // Save edited reminder
