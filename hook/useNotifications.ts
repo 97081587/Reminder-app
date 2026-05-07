@@ -42,4 +42,29 @@ export function useNotifications() {
       },
     });
   }
-}  
+
+  // edit reminder by canceling old and scheduling new
+  async function editReminder(
+    oldNotficationId: string,
+    newText: string,
+    newSeconds: number 
+  ) {
+    // remove old notification
+    await Notifications.cancelScheduledNotificationAsync(
+      oldNotficationId
+    );
+
+    // create new notification
+    const newNotificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Reminder ⏰",
+        body: newText,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: newSeconds,
+        repeats: false,
+      },
+    });
+  }
+}
