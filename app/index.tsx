@@ -6,7 +6,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
