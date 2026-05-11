@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from "react";
 import {
+  Dimensions,
+  FlatList,
   StyleSheet,
   Text,
   View,
@@ -25,8 +27,17 @@ export default function Home() {
 
   // LOAD
   const loadReminders = async () => {
-    const stored = await AsyncStorage.getItem("reminders");
-    setReminders(stored ? JSON.parse(stored) : []);
+    try {
+      const stored = await AsyncStorage.getItem("reminders");
+
+      if (stored) {
+        setReminders(JSON.parse(stored));
+      } else {
+        setReminders([]);
+      }
+    } catch (error) {
+      console.log("Error loading reminders:", error);
+    }
   };
 
   // DELETE
@@ -162,6 +173,10 @@ export default function Home() {
 
 /* STYLES */
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+
   container: {
     flex: 1,
   },
