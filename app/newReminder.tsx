@@ -3,7 +3,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Platform,
@@ -31,7 +31,6 @@ Notifications.setNotificationHandler({
 
 export default function NewReminder() {
   const router = useRouter();
-  const { lat, lng } = useLocalSearchParams();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -42,9 +41,7 @@ export default function NewReminder() {
   const [sound, setSound] = useState<"bell" | "chime" | "mijn">("bell");
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
-  const [location, setLocation] = useState<string | null>(
-    lat && lng ? `${lat}, ${lng}` : null
-  );
+  const [location, setLocation] = useState<string | null>(null);
 
   // 🔊 sound files
   const sounds = {
@@ -65,7 +62,8 @@ export default function NewReminder() {
 
   // 📍 open maps
   const handleAddLocation = () => {
-    router.push("/mapPicker");
+    setLocation("Opened Maps");
+    Linking.openURL("https://www.google.com/maps");
   };
 
   // ✅ Android notification channel
