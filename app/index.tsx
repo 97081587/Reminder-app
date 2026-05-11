@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
 
   plus: {
     fontSize: 42,
-    color: "#d1913c",
+        color: "#2a8c82",
     marginTop: -4,
   },
 }); 
