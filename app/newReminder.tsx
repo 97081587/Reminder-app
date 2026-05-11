@@ -42,6 +42,7 @@ export default function NewReminder() {
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
   const [location, setLocation] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
 
   // 🔊 sound files
   const sounds = {
@@ -124,11 +125,30 @@ export default function NewReminder() {
       }
     }
 
-    const trigger: Notifications.NotificationTriggerInput = {
-      type: "timeInterval",
-      seconds: 5,
-      repeats: false,
-    };
+ if (status !== "granted") {
+      alert("Permission not granted");
+      return;
+    }
+
+    let trigger: any;
+    if (repeat === "daily") {
+      trigger = {
+        type: "calendar",
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        type: "calendar",
+        weekday: date.getDay() + 1,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = { type: "date", date };
+    }
 
     // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
