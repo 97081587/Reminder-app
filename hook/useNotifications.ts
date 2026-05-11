@@ -28,8 +28,8 @@ export function useNotifications() {
   // schedule reminder
   async function scheduleReminder(text: string, seconds: number) {
     const granted = await requestPermission();
-    if (!granted) return;
-  
+    if (!granted) return null;
+  const notificationId =
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Reminder ⏰",
@@ -41,5 +41,32 @@ export function useNotifications() {
         repeats: false,
       },
     });
+
+    return notificationId;
   }
-}  
+
+  // edit reminder notification by canceling old and scheduling new
+  async function editReminder(
+    oldNotificationId: string,
+    newText: string,
+    newSeconds: number
+  ) {
+    // remove old notification
+    await Notifications.cancelScheduledNotificationAsync(
+      oldNotificationId
+    );
+
+    // create new notification
+    const newNotificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Reminder ⏰",
+          body: newText,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: newSeconds,
+          repeats: false,
+        },
+    });
+  }
+}
