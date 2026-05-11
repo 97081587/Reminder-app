@@ -1,3 +1,9 @@
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Notifications from "expo-notifications";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Platform,
@@ -31,6 +37,8 @@ Notifications.setNotificationHandler({
 export default function NewReminder() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+  const { lat, lng } = useLocalSearchParams();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<Date>(new Date());
@@ -49,8 +57,34 @@ export default function NewReminder() {
   // 🔊 MULTIPLE SOUNDS
   const [selectedSounds, setSelectedSounds] = useState<string[]>([]);
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
-  const soundOptions = ["Bell", "Chime", "Alert", "Digital", "Echo"];
 
+  const [location, setLocation] = useState<string | null>(
+    lat && lng ? `${lat}, ${lng}` : null
+  );
+
+  // 🔊 sound files
+  const sounds = {
+    bell: require("../assets/sounds/bell.mp3"),
+    chime: require("../assets/sounds/chime.mp3"),
+    mijn: require("../assets/sounds/mijn.mp3"),
+  };
+
+  // 🔊 play preview
+  const playSound = async (key: "bell" | "chime" | "mijn") => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(sounds[key]);
+      await sound.playAsync();
+    } catch (e) {
+      console.log("Sound error:", e);
+    }
+  };
+
+  // 📍 open maps
+  const handleAddLocation = () => {
+    router.push("/mapPicker");
+  };
+
+  // ✅ Android notification channel
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("default", {
