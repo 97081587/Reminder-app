@@ -1,18 +1,18 @@
-import React, { useState, useCallback } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   router,
   useFocusEffect,
 } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useCallback, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -358,4 +358,4 @@ const styles = StyleSheet.create({
     color: "#d1913c",
     marginTop: -4,
   },
-});
+}); 
