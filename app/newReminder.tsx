@@ -42,6 +42,7 @@ export default function NewReminder() {
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
   const [location, setLocation] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
 
   // 🔊 sound files
   const sounds = {
@@ -124,7 +125,7 @@ export default function NewReminder() {
       }
     }
 
- if (finalStatus !== "granted") {
+ if (status !== "granted") {
       alert("Permission not granted");
       return;
     }
