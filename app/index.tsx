@@ -1,15 +1,15 @@
-import React, { useState, useCallback } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useCallback, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -25,8 +25,17 @@ export default function Home() {
 
   // LOAD
   const loadReminders = async () => {
-    const stored = await AsyncStorage.getItem("reminders");
-    setReminders(stored ? JSON.parse(stored) : []);
+    try {
+      const stored = await AsyncStorage.getItem("reminders");
+
+      if (stored) {
+        setReminders(JSON.parse(stored));
+      } else {
+        setReminders([]);
+      }
+    } catch (error) {
+      console.log("Error loading reminders:", error);
+    }
   };
 
   // DELETE
@@ -36,10 +45,7 @@ export default function Home() {
 
     const updated = data.filter((item) => item.id !== id);
 
-    await AsyncStorage.setItem(
-      "reminders",
-      JSON.stringify(updated)
-    );
+    await AsyncStorage.setItem("reminders", JSON.stringify(updated));
 
     setReminders(updated);
   };
@@ -48,30 +54,24 @@ export default function Home() {
   useFocusEffect(
     useCallback(() => {
       loadReminders();
-    }, [])
+    }, []),
   );
 
   // CARD
   const ReminderCard = ({ item }: { item: Reminder }) => {
     return (
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardTitle}>{item.title ?? item.text}</Text>
 
-        <Text style={styles.cardDescription}>
-          {item.description}
-        </Text>
+        <Text style={styles.cardDescription}>{item.description}</Text>
 
         <View style={styles.actions}>
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-          >
+          <TouchableOpacity onPress={() => handleDelete(item.id)}>
             <Text style={styles.icon}>🗑️</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() =>
-              router.push(`/editReminder?id=${item.id}`)
-            }
+            onPress={() => router.push(`/editReminder?id=${item.id}`)}
           >
             <Text style={styles.icon}>✏️</Text>
           </TouchableOpacity>
@@ -81,23 +81,14 @@ export default function Home() {
   };
 
   return (
-    <LinearGradient
-      colors={["#2a8c82", "#d1913c"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#2a8c82", "#d1913c"]} style={styles.container}>
       {/* TOP BAR */}
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => setMenuOpen((p) => !p)}
-        >
-          <Text style={styles.menuIcon}>
-            {menuOpen ? "✕" : "☰"}
-          </Text>
+        <TouchableOpacity onPress={() => setMenuOpen((p) => !p)}>
+          <Text style={styles.menuIcon}>{menuOpen ? "✕" : "☰"}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.heading}>
-          Reminders
-        </Text>
+        <Text style={styles.heading}>Reminders</Text>
       </View>
 
       {/* OVERLAY MENU */}
@@ -112,26 +103,18 @@ export default function Home() {
 
           {/* SIDEBAR */}
           <View style={styles.sidebar}>
-            <Text style={styles.sidebarTitle}>
-              Menu
-            </Text>
+            <Text style={styles.sidebarTitle}>Menu</Text>
 
             <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>
-                📝 Past Reminders
-              </Text>
+              <Text style={styles.menuText}>📝 Past Reminders</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>
-                🗑️ Trash Bin
-              </Text>
+              <Text style={styles.menuText}>🗑️ Trash Bin</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>
-                ⚙️ Settings
-              </Text>
+              <Text style={styles.menuText}>⚙️ Settings</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -143,9 +126,7 @@ export default function Home() {
           data={reminders}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <ReminderCard item={item} />
-          )}
+          renderItem={({ item }) => <ReminderCard item={item} />}
         />
 
         {/* ADD BUTTON */}
@@ -162,6 +143,10 @@ export default function Home() {
 
 /* STYLES */
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+
   container: {
     flex: 1,
   },
@@ -243,7 +228,7 @@ const styles = StyleSheet.create({
 
   plus: {
     fontSize: 40,
-    color: "#d1913c",
+    color: "#2a8c82",
   },
 
   /* OVERLAY */
