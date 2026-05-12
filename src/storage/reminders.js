@@ -29,7 +29,8 @@ export const addReminder = async (reminder) => {
 
   const newReminder = {
     id: Date.now(),
-    title: reminder.title,
+    title: reminder.title ?? reminder.text ?? "",
+    text: reminder.title ?? reminder.text ?? "",
     description: reminder.description || "",
     date: reminder.date,
   };
@@ -38,7 +39,7 @@ export const addReminder = async (reminder) => {
   await saveReminders(updated);
 
   return updated;
-};  
+};
 
 // Delete a reminder
 export const deleteReminder = async (id) => {
@@ -52,19 +53,18 @@ export const deleteReminder = async (id) => {
 export const toggleReminder = async (id) => {
   const reminders = await getReminders();
   const updated = reminders.map((r) =>
-    r.id === id ? { ...r, done: !r.done } : r
+    r.id === id ? { ...r, done: !r.done } : r,
   );
   await saveReminders(updated);
   return updated;
 };
 
 // Edit reminder text
-export const editReminder = async (id: number, updatedFields: any) => {
-  const stored = await AsyncStorage.getItem("reminders");
-  const reminders = stored ? JSON.parse(stored) : [];
+export const editReminder = async (id, updatedFields) => {
+  const reminders = await getReminders();
 
-  const updated = reminders.map((r: any) =>
-    r.id === id ? { ...r, ...updatedFields } : r
+  const updated = reminders.map((r) =>
+    r.id === id ? { ...r, ...updatedFields } : r,
   );
 
   await saveReminders(updated);
