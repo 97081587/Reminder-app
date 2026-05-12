@@ -1,11 +1,15 @@
+import { addReminder } from "@/src/storage/reminders";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { Audio } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  Linking,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -13,12 +17,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  Linking,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Audio } from "expo-av";
-import { addReminder } from "@/src/storage/reminders";
 
 // ✅ Notification handler
 Notifications.setNotificationHandler({
@@ -42,6 +42,7 @@ export default function NewReminder() {
   const [soundPickerVisible, setSoundPickerVisible] = useState(false);
 
   const [location, setLocation] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<"none" | "daily" | "weekly">("none");
 
   // 🔊 sound files
   const sounds = {
@@ -89,7 +90,7 @@ export default function NewReminder() {
         currentDate.setFullYear(
           selectedDate.getFullYear(),
           selectedDate.getMonth(),
-          selectedDate.getDate()
+          selectedDate.getDate(),
         );
         setDate(currentDate);
 
@@ -100,7 +101,7 @@ export default function NewReminder() {
       } else {
         currentDate.setHours(
           selectedDate.getHours(),
-          selectedDate.getMinutes()
+          selectedDate.getMinutes(),
         );
         setDate(currentDate);
       }
@@ -124,11 +125,30 @@ export default function NewReminder() {
       }
     }
 
-    const trigger: Notifications.NotificationTriggerInput = {
-      type: "timeInterval",
-      seconds: 5,
-      repeats: false,
-    };
+    if (status !== "granted") {
+      alert("Permission not granted");
+      return;
+    }
+
+    let trigger: any;
+    if (repeat === "daily") {
+      trigger = {
+        type: "calendar",
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else if (repeat === "weekly") {
+      trigger = {
+        type: "calendar",
+        weekday: date.getDay() + 1,
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        repeats: true,
+      };
+    } else {
+      trigger = { type: "date", date };
+    }
 
     // Schedule notification
     const notificationId = await Notifications.scheduleNotificationAsync({
@@ -143,7 +163,7 @@ export default function NewReminder() {
     await addReminder({
       title,
       description,
-      date: new Date().toISOString(),
+      date: date.toISOString(),
     });
 
     router.replace("/");
@@ -207,13 +227,8 @@ export default function NewReminder() {
               </TouchableOpacity>
 
               {/* 📍 LOCATION */}
-              <TouchableOpacity
-                style={styles.pill}
-                onPress={handleAddLocation}
-              >
-                <Text>
-                  {location ? `📍 ${location}` : "📍 Add Location"}
-                </Text>
+              <TouchableOpacity style={styles.pill} onPress={handleAddLocation}>
+                <Text>{location ? `📍 ${location}` : "📍 Add Location"}</Text>
               </TouchableOpacity>
             </View>
 
@@ -354,7 +369,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    alignItems: "center",  
+    alignItems: "center",
   },
   modalContent: {
     width: 220,

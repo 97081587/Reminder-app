@@ -9,4 +9,4 @@ export const loadReminders = async () => {
 
 export const saveReminders = async (reminders: any[]) => {
   await AsyncStorage.setItem(KEY, JSON.stringify(reminders));
-};
+}; 
