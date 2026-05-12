@@ -1,18 +1,15 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
-import {
-  router,
-  useFocusEffect,
-} from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dimensions,
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
+  TouchableOpacity,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
@@ -26,7 +23,7 @@ export default function Home() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // LOAD REMINDERS
+  // LOAD
   const loadReminders = async () => {
     try {
       const stored = await AsyncStorage.getItem("reminders");
@@ -41,83 +38,51 @@ export default function Home() {
     }
   };
 
-  // DELETE REMINDER
-  const handleDelete = async (
-    id: string | number
-  ) => {
-    try {
-      const stored = await AsyncStorage.getItem(
-        "reminders"
-      );
+  // DELETE
+  const handleDelete = async (id: string | number) => {
+    const stored = await AsyncStorage.getItem("reminders");
+    const data: Reminder[] = stored ? JSON.parse(stored) : [];
 
-      const remindersData: Reminder[] = stored
-        ? JSON.parse(stored)
-        : [];
+    const updated = data.filter((item) => item.id !== id);
 
-      const updated = remindersData.filter(
-        (item) => item.id !== id
-      );
+    await AsyncStorage.setItem(
+      "reminders",
+      JSON.stringify(updated)
+    );
 
-      await AsyncStorage.setItem(
-        "reminders",
-        JSON.stringify(updated)
-      );
-
-      setReminders(updated);
-    } catch (error) {
-      console.log("Delete error:", error);
-    }
+    setReminders(updated);
   };
 
-  // REFRESH SCREEN
+  // REFRESH
   useFocusEffect(
     useCallback(() => {
       loadReminders();
     }, [])
   );
 
-  // REMINDER CARD
-  const ReminderCard = ({
-    item,
-  }: {
-    item: Reminder;
-  }) => {
+  // CARD
+  const ReminderCard = ({ item }: { item: Reminder }) => {
     return (
       <View style={styles.card}>
-        {/* TITLE */}
-        <Text style={styles.cardTitle}>
-          {item.title}
-        </Text>
+        <Text style={styles.cardTitle}>{item.title}</Text>
 
-        {/* DESCRIPTION */}
         <Text style={styles.cardDescription}>
           {item.description}
         </Text>
 
-        {/* ACTIONS */}
         <View style={styles.actions}>
-          {/* DELETE */}
           <TouchableOpacity
-            onPress={() =>
-              handleDelete(item.id)
-            }
+            onPress={() => handleDelete(item.id)}
           >
-            <Text style={styles.icon}>
-              🗑️
-            </Text>
+            <Text style={styles.icon}>🗑️</Text>
           </TouchableOpacity>
 
-          {/* EDIT */}
           <TouchableOpacity
             onPress={() =>
-              router.push(
-                `/editReminder?id=${item.id}`
-              )
+              router.push(`/editReminder?id=${item.id}`)
             }
           >
-            <Text style={styles.icon}>
-              ✏️
-            </Text>
+            <Text style={styles.icon}>✏️</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -127,106 +92,84 @@ export default function Home() {
   return (
     <LinearGradient
       colors={["#2a8c82", "#d1913c"]}
-      style={styles.gradient}
+      style={styles.container}
     >
-      <View style={styles.container}>
-        {/* TOP BAR */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            onPress={() =>
-              setMenuOpen(!menuOpen)
-            }
-          >
-            <Text style={styles.menuIcon}>
-              {menuOpen ? "✕" : "☰"}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.heading}>
-            Reminders
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => setMenuOpen((p) => !p)}
+        >
+          <Text style={styles.menuIcon}>
+            {menuOpen ? "✕" : "☰"}
           </Text>
-        </View>
+        </TouchableOpacity>
 
-        {/* SIDEBAR MENU */}
-        {menuOpen && (
+        <Text style={styles.heading}>
+          Reminders
+        </Text>
+      </View>
+
+      {/* OVERLAY MENU */}
+      {menuOpen && (
+        <View style={styles.overlay}>
+          {/* BACKDROP */}
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={() => setMenuOpen(false)}
+          />
+
+          {/* SIDEBAR */}
           <View style={styles.sidebar}>
             <Text style={styles.sidebarTitle}>
               Menu
             </Text>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-            >
+            <TouchableOpacity style={styles.menuItem}>
               <Text style={styles.menuText}>
                 📝 Past Reminders
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-            >
+            <TouchableOpacity style={styles.menuItem}>
               <Text style={styles.menuText}>
                 🗑️ Trash Bin
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-            >
+            <TouchableOpacity style={styles.menuItem}>
               <Text style={styles.menuText}>
                 ⚙️ Settings
               </Text>
             </TouchableOpacity>
-
-            <Text style={styles.version}>
-              v1.0.0
-            </Text>
           </View>
-        )}
-
-        {/* MAIN CONTENT */}
-        <View
-          style={[
-            styles.content,
-            menuOpen && {
-              marginLeft: width * 0.65,
-            },
-          ]}
-        >
-          {/* REMINDER LIST */}
-          <FlatList
-            data={reminders}
-            keyExtractor={(item) =>
-              item.id.toString()
-            }
-            showsVerticalScrollIndicator={
-              false
-            }
-            contentContainerStyle={
-              styles.listContainer
-            }
-            renderItem={({ item }) => (
-              <ReminderCard item={item} />
-            )}
-          />
-
-          {/* ADD BUTTON */}
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() =>
-              router.push("/newReminder")
-            }
-          >
-            <Text style={styles.plus}>
-              +
-            </Text>
-          </TouchableOpacity>
         </View>
+      )}
+
+      {/* MAIN CONTENT */}
+      <View style={styles.content}>
+        <FlatList
+          data={reminders}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <ReminderCard item={item} />
+          )}
+        />
+
+        {/* ADD BUTTON */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push("/newReminder")}
+        >
+          <Text style={styles.plus}>+</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
 }
 
+/* STYLES */
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
@@ -236,13 +179,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* TOP BAR */
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 60,
     paddingHorizontal: 20,
-    marginBottom: 20,
   },
 
   menuIcon: {
@@ -257,59 +198,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  /* SIDEBAR */
-  sidebar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: width * 0.65,
-    height: "100%",
-    backgroundColor:
-      "rgba(255,255,255,0.15)",
-    paddingTop: 100,
-    paddingHorizontal: 20,
-    zIndex: 10,
-  },
-
-  sidebarTitle: {
-    fontSize: 28,
-    color: "#fff",
-    fontWeight: "bold",
-    marginBottom: 30,
-  },
-
-  menuItem: {
-    marginBottom: 25,
-  },
-
-  menuText: {
-    fontSize: 18,
-    color: "#fff",
-  },
-
-  version: {
-    position: "absolute",
-    bottom: 30,
-    left: 20,
-    color: "#fff",
-    opacity: 0.7,
-  },
-
-  /* CONTENT */
   content: {
     flex: 1,
   },
 
-  listContainer: {
+  list: {
     paddingHorizontal: 20,
     paddingBottom: 120,
+    paddingTop: 20,
   },
 
   /* CARD */
   card: {
     width: "100%",
-    backgroundColor:
-      "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: 25,
     padding: 20,
     marginBottom: 15,
@@ -350,12 +252,52 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5,
   },
 
   plus: {
-    fontSize: 42,
-        color: "#2a8c82",
-    marginTop: -4,
+    fontSize: 40,
+    color: "#d1913c",
   },
-}); 
+
+  /* OVERLAY */
+  overlay: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 100,
+  },
+
+  backdrop: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+
+  sidebar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: width * 0.7,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingTop: 100,
+    paddingHorizontal: 20,
+  },
+
+  sidebarTitle: {
+    fontSize: 28,
+    color: "#fff",
+    fontWeight: "bold",
+    marginBottom: 30,
+  },
+
+  menuItem: {
+    marginBottom: 25,
+  },
+
+  menuText: {
+    fontSize: 18,
+    color: "#fff",
+  },
+});
