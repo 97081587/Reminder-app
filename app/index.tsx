@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
 
   plus: {
     fontSize: 40,
-    color: "#d1913c",
+    color: "#2a8c82",
   },
 
   /* OVERLAY */
